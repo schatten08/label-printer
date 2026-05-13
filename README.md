@@ -6,7 +6,7 @@ A GUI utility for batch printing labels on Brother printers (specifically QL-810
 This program allows you to quickly print a series of labels by pasting a list of asset numbers separated by spaces, commas, or new lines (ideal for copying directly from ServiceNow HAM or Excel). The input is automatically sanitized from unwanted special characters before printing. The graphical interface is written in Python (Tkinter), and the interaction with the printer driver is handled via a PowerShell script using official Brother bPAC3 COM objects.
 
 ## Requirements
-- OS: Windows
+- OS: **Windows only** (bPAC SDK and PowerShell COM objects are exclusively supported on Windows OS).
 - Installed Python 3 (added to the PATH environment variable).
 - Installed printer **Brother QL-810W** (or another supported Brother printer) and its drivers.
 - Installed **Brother bPAC3 SDK**.
