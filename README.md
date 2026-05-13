@@ -3,7 +3,11 @@
 A GUI utility for batch printing labels on Brother printers (specifically QL-810W) using the Brother bPAC3 SDK.
 
 ## Description
-This program allows you to quickly print a series of labels by pasting a list of asset numbers separated by spaces, commas, or new lines (ideal for copying directly from ServiceNow HAM or Excel). The input is automatically sanitized from unwanted special characters before printing. The graphical interface is written in Python (Tkinter), and the interaction with the printer driver is handled via a PowerShell script using official Brother bPAC3 COM objects.
+This program allows you to quickly print a series of labels. It features a tabbed interface with two distinct modes:
+1. **Batch Printing Mode**: Paste a list of asset numbers separated by spaces, commas, or new lines (ideal for copying directly from ServiceNow HAM or Excel) to print them all at once.
+2. **Scanner Dictionary Mode**: Paste a two-column mapping of Serial Numbers (SN) to Labels. Connect a barcode scanner, scan the SN on a physical box, and the program will automatically find and print the corresponding Label in real-time with audio feedback.
+
+The input is automatically sanitized from unwanted special characters before printing. The graphical interface is written in Python (Tkinter). For Windows, the interaction with the printer driver is handled via a PowerShell script using official Brother bPAC3 COM objects. For macOS, it uses dynamic barcode image generation and the CUPS print server.
 
 ## Requirements
 - OS: **Windows** (Primary version via bPAC SDK) or **macOS** (Alternative version via CUPS).
@@ -22,16 +26,25 @@ For macOS, the application dynamically generates barcode images and bypasses the
 3. Edit `mac_version/print_gui_mac.py` and set the `PRINTER_NAME` variable to match your printer's name.
 
 ## Usage
-### On Windows
+*The application provides two tabs/modes of operation:*
+
+### Tab 1: Batch Printing (List)
+1. Paste the copied asset/label numbers into the large text box.
+2. Click the "Send to printer" button. All labels will be generated and printed sequentially.
+
+### Tab 2: Box Scanner (SN -> Label)
+1. Paste a two-column list (SN and Label) from Excel or ServiceNow into the upper dictionary field. Both horizontal formats and vertical sequential formats are supported.
+2. Place your cursor in the bottom scanner input field.
+3. Use a physical barcode scanner to scan the SN on your boxes. The program will parse the input (ignoring hardware 'S' prefixes), map it to the label, and print it automatically. You'll hear a system beep upon success or a different tone if the SN isn't found.
+
+### Launching on Windows
 1. Ensure the printer is connected, turned on, and has the correct label roll installed.
 2. Ensure your label template is saved as `Label.lbx` (created in P-touch Editor) in the project folder. The template must contain text/barcode objects named `Label` and `BarCode`.
 3. Launch the application via **`Run Label Printer.bat`** (or use the created shortcut `Label Printer.lnk`). It uses `pythonw` to hide the console window.
-4. Paste the copied asset numbers into the text box and click the "Send to printer" button.
 
-### On macOS
+### Launching on macOS
 1. Navigate to the `mac_version` directory.
 2. Run the script: `python3 print_gui_mac.py`
-3. The rest of the interface works exactly the same as on Windows.
 
 ## Project Structure
 - `print_gui.py` — The main graphical user interface (Python/Tkinter).
