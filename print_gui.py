@@ -192,7 +192,7 @@ theme_menu.add_command(label="Светлая", command=lambda: apply_theme("ligh
 menubar.add_cascade(label="Тема", menu=theme_menu)
 window.config(menu=menubar)
 
-apply_theme("dark") # Инициализация темной темы
+apply_theme("light") # Инициализация светлой темы по умолчанию
 
 header = ttk.Label(window, text="🖨️ Печать этикеток", font=("Segoe UI", 16, "bold"))
 header.pack(pady=(10, 0))
@@ -247,5 +247,5 @@ scan_entry.bind("<Return>", on_scan)
 scan_status = ttk.Label(tab_scan, text="", font=("Segoe UI", 10))
 scan_status.pack(pady=5)
 
-apply_theme("dark") # Применяем вторично, чтобы обновить цвета у tk.Text после их создания
+apply_theme("light") # Применяем вторично, чтобы обновить цвета у tk.Text после их создания
 window.mainloop()
