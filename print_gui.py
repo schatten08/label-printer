@@ -77,9 +77,13 @@ def add_context_menu(widget):
     # Показ меню по клику правой кнопкой
     widget.bind("<Button-3>", lambda e: menu.tk_popup(e.x_root, e.y_root))
     
-    # Модификатор для русской раскладки клавиатуры
-    widget.bind("<Control-м>", lambda e: widget.event_generate("<<Paste>>"))
-    widget.bind("<Control-М>", lambda e: widget.event_generate("<<Paste>>"))
+    # Модификатор для русской раскладки клавиатуры (перехват по keycode вместо символа)
+    def check_paste(event):
+        if event.state & 4 and event.keycode == 86: # 4 = Ctrl, 86 = V (независимо от языка)
+            widget.event_generate("<<Paste>>")
+            return "break"
+            
+    widget.bind("<KeyPress>", check_paste, add="+")
 
 window = tk.Tk()
 window.title("Печать этикеток Brother")
