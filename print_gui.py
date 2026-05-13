@@ -139,35 +139,60 @@ window.title("Печать этикеток Brother")
 window.geometry("520x540")
 window.resizable(False, False)
 
-# --- Применение Темной Темы (Стиль VS Code) ---
-bg_color = "#252526"      # Фон окна (как боковая панель VS Code)
-fg_color = "#cccccc"      # Основной текст
-accent_color = "#0e639c"  # Синие кнопки (VS Code Blue)
-accent_hover = "#1177bb"  # Наведение на кнопку
-text_bg = "#1e1e1e"       # Фон поля ввода (как редактор VS Code)
-tab_inactive = "#2d2d2d"  # Неактивная вкладка
-
-window.configure(bg=bg_color)
 style = ttk.Style()
 if 'clam' in style.theme_names():
     style.theme_use('clam')
 
-style.configure('.', background=bg_color, foreground=fg_color)
-style.configure('TFrame', background=bg_color)
-style.configure('TLabel', background=bg_color, foreground=fg_color, font=("Segoe UI", 10))
-style.configure('TButton', background=accent_color, foreground="white", font=("Segoe UI", 10, "bold"), padding=6, borderwidth=0)
-style.map('TButton', background=[('active', accent_hover)])
+def apply_theme(theme_name):
+    if theme_name == "dark":
+        bg_color = "#252526"
+        fg_color = "#cccccc"
+        accent_color = "#0e639c"
+        accent_hover = "#1177bb"
+        text_bg = "#1e1e1e"
+        tab_inactive = "#2d2d2d"
+        input_bg = "#3c3c3c"
+        input_fg = "white"
+    else:
+        bg_color = "#f3f3f3"
+        fg_color = "#333333"
+        accent_color = "#007acc"
+        accent_hover = "#005999"
+        text_bg = "#ffffff"
+        tab_inactive = "#e8e8e8"
+        input_bg = "#ffffff"
+        input_fg = "black"
 
-# Поля ввода и комбобоксы сделаем чуть светлее, в стиле инпутов VS Code (#3c3c3c)
-style.configure('TCombobox', fieldbackground="#3c3c3c", background=bg_color, foreground="white", arrowcolor=fg_color)
-style.map('TCombobox', fieldbackground=[('readonly', "#3c3c3c")], selectbackground=[('readonly', accent_color)])
-style.configure('TEntry', fieldbackground="#3c3c3c", foreground="white", insertcolor="white")
+    window.configure(bg=bg_color)
+    style.configure('.', background=bg_color, foreground=fg_color)
+    style.configure('TFrame', background=bg_color)
+    style.configure('TLabel', background=bg_color, foreground=fg_color, font=("Segoe UI", 10))
+    style.configure('TButton', background=accent_color, foreground="white", font=("Segoe UI", 10, "bold"), padding=6, borderwidth=0)
+    style.map('TButton', background=[('active', accent_hover)])
 
-style.configure('TNotebook', background=bg_color, borderwidth=0)
-style.configure('TNotebook.Tab', background=tab_inactive, foreground=fg_color, padding=[15, 5], font=("Segoe UI", 10))
-# Выбранная вкладка сливается с фоном редактора (text_bg)
-style.map('TNotebook.Tab', background=[('selected', text_bg), ('active', '#333333')], foreground=[('selected', 'white')])
-# -----------------------------
+    style.configure('TCombobox', fieldbackground=input_bg, background=bg_color, foreground=input_fg, arrowcolor=fg_color)
+    style.map('TCombobox', fieldbackground=[('readonly', input_bg)], selectbackground=[('readonly', accent_color)], foreground=[('readonly', input_fg)])
+    style.configure('TEntry', fieldbackground=input_bg, foreground=input_fg, insertcolor=input_fg)
+
+    style.configure('TNotebook', background=bg_color, borderwidth=0)
+    style.configure('TNotebook.Tab', background=tab_inactive, foreground=fg_color, padding=[15, 5], font=("Segoe UI", 10))
+    style.map('TNotebook.Tab', background=[('selected', text_bg), ('active', '#333333' if theme_name=="dark" else '#d4d4d4')], foreground=[('selected', input_fg)])
+
+    try:
+        text_input.config(bg=text_bg, fg=input_fg, insertbackground=input_fg)
+        dict_input.config(bg=text_bg, fg=input_fg, insertbackground=input_fg)
+    except NameError:
+        pass
+
+# Основное меню
+menubar = tk.Menu(window)
+theme_menu = tk.Menu(menubar, tearoff=0)
+theme_menu.add_command(label="Темная (VS Code)", command=lambda: apply_theme("dark"))
+theme_menu.add_command(label="Светлая", command=lambda: apply_theme("light"))
+menubar.add_cascade(label="Тема", menu=theme_menu)
+window.config(menu=menubar)
+
+apply_theme("dark") # Инициализация темной темы
 
 header = ttk.Label(window, text="🖨️ Печать этикеток", font=("Segoe UI", 16, "bold"))
 header.pack(pady=(10, 0))
@@ -192,7 +217,7 @@ notebook.add(tab_batch, text=" 📝 Список (Массовая) ")
 desc_batch = ttk.Label(tab_batch, text="Введите инвентарные номера (можно таблицей):", justify="center")
 desc_batch.pack(pady=(10, 5))
 
-text_input = tk.Text(tab_batch, height=10, width=50, font=("Consolas", 11), wrap=tk.WORD, bg="#1e1e1e", fg="#d4d4d4", insertbackground="white", relief=tk.FLAT)
+text_input = tk.Text(tab_batch, height=10, width=50, font=("Consolas", 11), wrap=tk.WORD, relief=tk.FLAT)
 text_input.pack(pady=10, padx=20, fill=tk.BOTH, expand=True)
 add_context_menu(text_input)
 
@@ -208,7 +233,7 @@ notebook.add(tab_scan, text=" 🔍 Сканер коробок (SN -> Label) ")
 desc_dict = ttk.Label(tab_scan, text="1. Вставьте 2 колонки из Excel (SN и Label):", justify="center")
 desc_dict.pack(pady=(10, 2))
 
-dict_input = tk.Text(tab_scan, height=8, width=50, font=("Consolas", 10), wrap=tk.WORD, bg="#1e1e1e", fg="#d4d4d4", insertbackground="white", relief=tk.FLAT)
+dict_input = tk.Text(tab_scan, height=8, width=50, font=("Consolas", 10), wrap=tk.WORD, relief=tk.FLAT)
 dict_input.pack(pady=5, padx=20, fill=tk.BOTH, expand=True)
 add_context_menu(dict_input)
 
@@ -222,4 +247,5 @@ scan_entry.bind("<Return>", on_scan)
 scan_status = ttk.Label(tab_scan, text="", font=("Segoe UI", 10))
 scan_status.pack(pady=5)
 
+apply_theme("dark") # Применяем вторично, чтобы обновить цвета у tk.Text после их создания
 window.mainloop()
