@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
 set "SCRIPT_DIR=%~dp0"
-set "SHORTCUT_PATH=%USERPROFILE%\Desktop\Печать этикеток Brother.lnk"
+set "SHORTCUT_PATH=%USERPROFILE%\Desktop\Brother Label Printer.lnk"
 set "TARGET_SCRIPT=%SCRIPT_DIR%src\windows_version\print_gui.py"
 :: Используем pyw.exe для запуска без консоли. Экзешник всегда можно закрепить на панели задач!
 set "TARGET_EXE=pyw.exe"
@@ -20,6 +20,6 @@ echo oLink.Save >> CreateShortcut.vbs
 cscript /nologo CreateShortcut.vbs
 del CreateShortcut.vbs
 
-echo Ярлык "Печать этикеток Brother" успешно создан на рабочем столе!
+echo Ярлык "Brother Label Printer" успешно создан на рабочем столе!
 echo Теперь вы можете нажать по нему правой кнопкой мыши и выбрать "Закрепить на панели задач".
 pause
