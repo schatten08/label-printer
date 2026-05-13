@@ -13,22 +13,15 @@ try:
 except ImportError:
     pass
 
-def get_mac_printer_name():
-    """ Пытается автоматически найти принтер Brother в системе (CUPS) """
+def get_mac_printers():
+    """ Получает список всех системных принтеров через CUPS """
     try:
-        result = subprocess.run(["lpstat", "-p"], capture_output=True, text=True)
-        for line in result.stdout.splitlines():
-            if "printer" in line.lower():
-                parts = line.split()
-                if len(parts) >= 2:
-                    p_name = parts[1]
-                    if "brother" in p_name.lower() or "ql" in p_name.lower():
-                        return p_name
+        result = subprocess.run(["lpstat", "-a"], capture_output=True, text=True)
+        # lpstat -a выводит строки вида: "Brother_QL_810W accepting requests since..."
+        printers = [line.split()[0] for line in result.stdout.splitlines() if line]
+        return printers if printers else ["Нет доступных принтеров"]
     except:
-        pass
-    return "Brother_QL_810W" # Фолбэк по умолчанию
-
-PRINTER_NAME = get_mac_printer_name()
+        return ["Ошибка_Поиска_Принтеров"]
 
 def play_sound(sound_type):
     \"\"\" Воспроизводит системный звук на macOS \"\"\"
@@ -159,7 +152,7 @@ def add_context_menu(widget):
 
 window = tk.Tk()
 window.title("Mac Label Printer")
-window.geometry("500x480")
+window.geometry("500x520")
 window.resizable(False, False)
 
 style = ttk.Style()
@@ -169,7 +162,18 @@ else:
     style.theme_use('default')
 
 header = ttk.Label(window, text="🍏 Печать этикеток (Mac)", font=("Helvetica", 16, "bold"))
-header.pack(pady=(10, 5))
+header.pack(pady=(10, 0))
+
+# Блок выбора принтера (Выпадающий список)
+printers_list = get_mac_printers()
+default_p = next((p for p in printers_list if "QL" in p.upper() or "BROTHER" in p.upper()), printers_list[0])
+
+printer_frame = ttk.Frame(window)
+printer_frame.pack(fill=tk.X, padx=20, pady=5)
+ttk.Label(printer_frame, text="Принтер:", font=("Helvetica", 10)).pack(side=tk.LEFT)
+printer_var = tk.StringVar(value=default_p)
+printer_cb = ttk.Combobox(printer_frame, textvariable=printer_var, values=printers_list, state="readonly")
+printer_cb.pack(side=tk.RIGHT, expand=True, fill=tk.X, padx=(10, 0))
 
 notebook = ttk.Notebook(window)
 notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
