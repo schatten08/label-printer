@@ -26,7 +26,9 @@ def send_to_printer(text, status_widget, btn_widget=None):
             if result.returncode == 0:
                 window.after(0, lambda: status_widget.config(text=f"✅ Напечатано: {text}", foreground="green"))
             else:
-                window.after(0, lambda: status_widget.config(text="❌ Ошибка при печати", foreground="red"))
+                err_msg = result.stdout.strip() if result.stdout else "Неизвестная ошибка принтера"
+                window.after(0, lambda: messagebox.showerror("Ошибка печати", f"Скрипт сообщил об ошибке:\n{err_msg}"))
+                window.after(0, lambda: status_widget.config(text="❌ Ошибка принтера", foreground="red"))
         except Exception as e:
             window.after(0, lambda err=e: status_widget.config(text=f"❌ Ошибка: {err}", foreground="red"))
         finally:

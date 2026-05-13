@@ -25,12 +25,24 @@ if ($InputJson) {
 }
 
 $Printers = New-Object -ComObject bpac.Printer
-$TargetPrinter = "Brother QL-810W"
 
-# Умный поиск принтера (вместо индекса [0])
+# Получаем список поддерживаемых принтеров Brother, установленных в системе
+$InstalledPrinters = $Printers.GetInstalledPrinters()
+
+if ($null -eq $InstalledPrinters -or $InstalledPrinters.Length -eq 0) {
+    Write-Output "Error: No supported Brother printers found on this system."
+    exit 1
+}
+
+# Ищем QL-810W, а если у коллеги другая модель (например, QL-1100 или копия), берем первую доступную
+$TargetPrinter = $InstalledPrinters | Where-Object { $_ -match "QL-810W" } | Select-Object -First 1
+if (-not $TargetPrinter) {
+    $TargetPrinter = $InstalledPrinters[0]
+}
+
 if (-not $Printers.IsPrinterSupported($TargetPrinter)) {
-    Write-Output "Error: Printer '$TargetPrinter' is not supported or not installed."
-    exit
+    Write-Output "Error: Printer '$TargetPrinter' is not supported."
+    exit 1
 }
 
 $LabelDoc = New-Object -ComObject bpac.Document
