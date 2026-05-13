@@ -4,6 +4,7 @@ import subprocess
 import threading
 import os
 import re
+import winsound
 
 def send_to_printer(text, status_widget, btn_widget=None):
     status_widget.config(text="⏳ Идет отправка...", foreground="blue")
@@ -85,8 +86,12 @@ def on_scan(event):
 
     if label:
         label = re.sub(r'[^\w\s\-,;]', '', label)
+        # Звук успешного сканирования (высокий и короткий "Пик")
+        threading.Thread(target=lambda: winsound.Beep(2000, 150), daemon=True).start()
         send_to_printer(label, scan_status)
     else:
+        # Звук ошибки (низкий и длинный "Бууп")
+        threading.Thread(target=lambda: winsound.Beep(500, 400), daemon=True).start()
         scan_status.config(text=f"❌ SN не найден: {sn}", foreground="red")
 
 def add_context_menu(widget):
