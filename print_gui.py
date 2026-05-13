@@ -63,7 +63,8 @@ def print_batch():
     # Предотвращение случайного запуска огромной очереди печати
     items_to_print = [n for n in re.split(r'[,;\s]+', text) if n]
     if len(items_to_print) > 10:
-        if not messagebox.askyesno("Подтверждение", f"Вы собираетесь отправить на печать {len(items_to_print)} этикеток!\n\nВы уверены, что хотите продолжить?"):
+        msg = f"Введено огромное количество номеров: {len(items_to_print)} шт.\n\nВы точно уверены, что хотите отправить их все на печать?"
+        if not messagebox.askyesno("Защита от случайной печати", msg):
             return
 
     send_to_printer(text, batch_status, print_btn)
