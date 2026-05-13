@@ -7,7 +7,7 @@ This program allows you to quickly print a series of labels. It features a tabbe
 1. **Batch Printing Mode**: Paste a list of asset numbers separated by spaces, commas, or new lines (ideal for copying directly from ServiceNow HAM or Excel) to print them all at once.
 2. **Scanner Dictionary Mode**: Paste a two-column mapping of Serial Numbers (SN) to Labels. Connect a barcode scanner, scan the SN on a physical box, and the program will automatically find and print the corresponding Label in real-time with audio feedback.
 
-The input is automatically sanitized from unwanted special characters before printing. The graphical interface is written in Python (Tkinter). For Windows, the interaction with the printer driver is handled via a PowerShell script using official Brother bPAC3 COM objects. For macOS, it uses dynamic barcode image generation and the CUPS print server.
+The application automatically scans for installed printers and populates a dropdown menu, defaulting to the Brother printer. The input is automatically sanitized from unwanted special characters before printing. The graphical interface is written in Python (Tkinter). For Windows, the interaction with the printer driver is handled via a PowerShell script using official Brother bPAC3 COM objects. For macOS, it uses dynamic barcode image generation and the CUPS print server.
 
 ## Requirements
 - OS: **Windows** (Primary version via bPAC SDK) or **macOS** (Alternative version via CUPS).
