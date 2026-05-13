@@ -67,6 +67,20 @@ def on_scan(event):
     else:
         scan_status.config(text=f"❌ SN не найден: {sn}", foreground="red")
 
+def add_context_menu(widget):
+    """ Додаем контекстное меню (ПКМ) и чиним Ctrl+V для русской раскладки """
+    menu = tk.Menu(widget, tearoff=0)
+    menu.add_command(label="Вставить", command=lambda: widget.event_generate("<<Paste>>"))
+    menu.add_command(label="Копировать", command=lambda: widget.event_generate("<<Copy>>"))
+    menu.add_command(label="Вырезать", command=lambda: widget.event_generate("<<Cut>>"))
+    
+    # Показ меню по клику правой кнопкой
+    widget.bind("<Button-3>", lambda e: menu.tk_popup(e.x_root, e.y_root))
+    
+    # Модификатор для русской раскладки клавиатуры
+    widget.bind("<Control-м>", lambda e: widget.event_generate("<<Paste>>"))
+    widget.bind("<Control-М>", lambda e: widget.event_generate("<<Paste>>"))
+
 window = tk.Tk()
 window.title("Печать этикеток Brother")
 window.geometry("500x480")
@@ -89,6 +103,7 @@ desc_batch.pack(pady=(10, 5))
 
 text_input = tk.Text(tab_batch, height=10, width=50, font=("Consolas", 11), wrap=tk.WORD)
 text_input.pack(pady=5, padx=20)
+add_context_menu(text_input)
 
 print_btn = ttk.Button(tab_batch, text="Отправить на принтер", command=print_batch)
 print_btn.pack(pady=(10, 5), ipadx=10, ipady=5)
@@ -104,6 +119,7 @@ desc_dict.pack(pady=(10, 2))
 
 dict_input = tk.Text(tab_scan, height=8, width=50, font=("Consolas", 10), wrap=tk.WORD)
 dict_input.pack(pady=5, padx=20)
+add_context_menu(dict_input)
 
 desc_scan = ttk.Label(tab_scan, text="2. Кликните сюда и сканируйте SN с коробок:", justify="center")
 desc_scan.pack(pady=(10, 2))
