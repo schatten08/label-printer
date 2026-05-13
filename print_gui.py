@@ -60,8 +60,15 @@ def on_scan(event):
         if len(parts) >= 2:
             mapping[parts[0]] = parts[1]
             
+    # Умный поиск: точное совпадение ИЛИ совпадение без префикса 'S' (добавляют некоторые сканеры)
     if sn in mapping:
         label = mapping[sn]
+    elif sn.upper().startswith('S') and sn[1:] in mapping:
+        label = mapping[sn[1:]]
+    else:
+        label = None
+
+    if label:
         label = re.sub(r'[^\w\s\-,;]', '', label)
         send_to_printer(label, scan_status)
     else:
