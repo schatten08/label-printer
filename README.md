@@ -1,24 +1,25 @@
 # Brother Label Printer
 
-Утилита с графическим интерфейсом для потоковой печати этикеток на принтерах Brother (в частности, QL-810W) с использованием Brother bPAC3 SDK.
+A GUI utility for batch printing labels on Brother printers (specifically QL-810W) using the Brother bPAC3 SDK.
 
-## Описание
-Программа позволяет быстро распечатать серию этикеток, введя список инвентарных номеров через пробел, запятую или с новой строки. Графический интерфейс написан на Python (Tkinter), а само взаимодействие с драйвером принтера осуществляется через PowerShell скрипт и официальный bPAC3 SDK от Brother.
+## Description
+This program allows you to quickly print a series of labels by pasting a list of asset numbers separated by spaces, commas, or new lines (ideal for copying directly from ServiceNow HAM or Excel). The input is automatically sanitized from unwanted special characters before printing. The graphical interface is written in Python (Tkinter), and the interaction with the printer driver is handled via a PowerShell script using official Brother bPAC3 COM objects.
 
-## Требования
-- ОС: Windows
-- Установленный Python 3 (прописанный в переменной окружения PATH)
-- Установленный принтер **Brother QL-810W** (или другой поддерживаемый).
-- Установленный **Brother bPAC3 SDK** (по умолчанию скрипт ищет DLL библиотеку по пути `C:\Program Files\Brother bPAC3 SDK\...`).
+## Requirements
+- OS: Windows
+- Installed Python 3 (added to the PATH environment variable).
+- Installed printer **Brother QL-810W** (or another supported Brother printer) and its drivers.
+- Installed **Brother bPAC3 SDK**.
+  - **How to install SDK**: Download the [Brother bPAC Client SDK](https://support.brother.com/g/s/es/dev/en/bpac/index.html) from the official Brother Developer Center (ensure you select your Windows version: 32-bit or 64-bit). Run the installer. Since our script uses standard Windows COM objects (`bpac.Document`), you only need a standard installation. The script will automatically connect to the SDK without needing hardcoded paths to `.dll` files.
 
-## Использование
-1. Убедитесь, что принтер подключен и включен.
-2. В файле `Label.lbx` должен находиться ваш шаблон этикетки (созданный в P-touch Editor), содержащий текстовые объекты/штрихкоды с именами `Label` и `BarCode`.
-3. Запустите скрипт через файл **`Run Label Printer.bat`** (он использует `pythonw` для скрытия консольного окна).
-4. Во всплывшем окне введите номера и нажмите "Отправить на принтер".
+## Usage
+1. Ensure the printer is connected, turned on, and has the correct label roll installed.
+2. Ensure your label template is saved as `Label.lbx` (created in P-touch Editor) in the project folder. The template must contain text/barcode objects named `Label` and `BarCode`.
+3. Launch the application via **`Run Label Printer.bat`** (or use the created shortcut `Label Printer.lnk`). It uses `pythonw` to hide the console window.
+4. Paste the copied asset numbers into the text box and click the "Send to printer" button.
 
-## Структура проекта
-- `print_gui.py` — Главный графический интерфейс (UI).
-- `print.ps1` — Скрипт PowerShell, который работает с COM/bPAC SDK для отправки на принтер.
-- `Label.lbx` — Шаблон этикетки.
-- `Run Label Printer.bat` — Файл для быстрого запуска UI.
+## Project Structure
+- `print_gui.py` — The main graphical user interface (Python/Tkinter).
+- `print.ps1` — The PowerShell script that communicates with the printer via the COM/bPAC SDK.
+- `Label.lbx` — The Brother label template.
+- `Run Label Printer.bat` — Batch script for quick UI launch.
