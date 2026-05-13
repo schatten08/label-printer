@@ -5,6 +5,14 @@ import threading
 import os
 import re
 import winsound
+import ctypes
+
+# Отвязываем значок на панели задач от базового процесса Python (чтобы можно было закрепить именно программу)
+try:
+    myappid = 'brother.label.printer.gui.1_4'
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+except Exception:
+    pass
 
 def get_windows_printers():
     try:
