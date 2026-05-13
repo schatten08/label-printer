@@ -37,6 +37,7 @@ def print_labels():
             if result.returncode == 0:
                 # Возвращаемся в главный поток для обновления интерфейса
                 window.after(0, lambda: status_label.config(text="✅ Успешно напечатано!", foreground="green"))
+                window.after(0, lambda: text_input.delete("1.0", tk.END)) # Очищаем поле для новой партии
             else:
                 window.after(0, lambda: status_label.config(text="❌ Ошибка при печати", foreground="red"))
                 print(result.stderr)
@@ -69,6 +70,7 @@ desc.pack(pady=(0, 10))
 # Поле для ввода (многострочное, удобно для вставки из Excel)
 text_input = tk.Text(window, height=8, width=50, font=("Consolas", 11), wrap=tk.WORD)
 text_input.pack(pady=5, padx=20)
+text_input.focus_set() # <--- Автоматически ставим курсор при запуске программы
 
 # Кнопка печати
 print_btn = ttk.Button(window, text="Отправить на принтер", command=print_labels)
