@@ -6,9 +6,6 @@
     [string]$InputJson
 )
 
-# Загружаем библиотеку SDK Brother
-[void][System.Reflection.Assembly]::LoadFile("C:\Program Files\Brother bPAC3 SDK\Samples\VCS\NamePlt\bin\x64\Release\Interop.bpac.dll")
-
 # Формируем список задач на печать (можно передать старым способом просто $Text1, либо новым массивом JSON)
 $PrintJobs = @()
 if ($InputJson) {
@@ -27,7 +24,7 @@ if ($InputJson) {
     exit
 }
 
-$Printers = New-Object bpac.PrinterClass
+$Printers = New-Object -ComObject bpac.Printer
 $TargetPrinter = "Brother QL-810W"
 
 # Умный поиск принтера (вместо индекса [0])
@@ -36,8 +33,8 @@ if (-not $Printers.IsPrinterSupported($TargetPrinter)) {
     exit
 }
 
-$LabelDoc = New-Object bpac.DocumentClass
-$Filename = '.\Label.lbx'
+$LabelDoc = New-Object -ComObject bpac.Document
+$Filename = Join-Path -Path $PSScriptRoot -ChildPath 'Label.lbx'
 
 If ($LabelDoc.Open($Filename)) {
     try {
