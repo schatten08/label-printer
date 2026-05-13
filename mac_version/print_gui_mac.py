@@ -24,7 +24,7 @@ def get_mac_printers():
         return ["Ошибка_Поиска_Принтеров"]
 
 def play_sound(sound_type):
-    \"\"\" Воспроизводит системный звук на macOS \"\"\"
+    """ Воспроизводит системный звук на macOS """
     try:
         if sound_type == "success":
             subprocess.run(["afplay", "/System/Library/Sounds/Glass.aiff"], check=False)
@@ -60,9 +60,7 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
     def run_script():
         try:
             numbers = re.split(r'[,;\s]+', text_data)
-            err_msg = result.stderr.strip() if result.stderr else "Неизвестная ошибка CUPS"
-                    window.after(0, lambda e=err_msg: messagebox.showerror("Ошибка печати", f"Скрипт сообщил об ошибке:\n{e}"))
-                    raise Exception("Ошибка принтера
+            
             for num in numbers:
                 clean_num = num.strip()
                 if not clean_num:
@@ -72,11 +70,14 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
                 generate_label_image(clean_num, temp_file)
                 image_path = temp_file + ".png"
                 
-                cmd = ["lpr", "-P", PRINTER_NAME, image_path]
+                selected_printer = printer_var.get()
+                cmd = ["lpr", "-P", selected_printer, image_path]
                 result = subprocess.run(cmd, capture_output=True, text=True)
                 
                 if result.returncode != 0:
-                    raise Exception(f"Ошибка CUPS: {result.stderr}")
+                    err_msg = result.stderr.strip() if result.stderr else "Неизвестная ошибка CUPS"
+                    window.after(0, lambda e=err_msg: messagebox.showerror("Ошибка печати", f"Скрипт сообщил об ошибке:\n{e}"))
+                    raise Exception("Ошибка принтера")
                 
                 try: os.remove(image_path)
                 except: pass
@@ -100,6 +101,13 @@ def print_batch():
     if not text:
         messagebox.showwarning("Внимание", "Пожалуйста, введите номера для печати.")
         return
+
+    # Предотвращение случайного запуска огромной очереди печати
+    items_to_print = [n for n in re.split(r'[,;\s]+', text) if n]
+    if len(items_to_print) > 10:
+        if not messagebox.askyesno("Подтверждение", f"Вы собираетесь отправить на печать {len(items_to_print)} этикеток!\n\nВы уверены, что хотите продолжить?"):
+            return
+
     send_to_printer(text, batch_status, print_btn)
 
 def on_scan(event):

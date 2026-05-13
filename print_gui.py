@@ -6,7 +6,19 @@ import os
 import re
 import winsound
 
+def get_windows_printers():
+    try:
+        cmd = ["powershell", "-NoProfile", "-Command", "Get-Printer | Select-Object -ExpandProperty Name"]
+        # Используем cp866 для кириллических имен принтеров в русской Windows
+        # creationflags=0x08000000 предотвращает моргание черного окна консоли
+        result = subprocess.run(cmd, capture_output=True, text=True, encoding="cp866", creationflags=0x08000000)
+        printers = [p.strip() for p in result.stdout.splitlines() if p.strip()]
+        return printers if printers else ["Принтеры не найдены"]
+    except Exception:
+        return ["Ошибка поиска принтеров"]
+
 def send_to_printer(text, status_widget, btn_widget=None):
+    selected_printer = printer_var.get()
     status_widget.config(text="⏳ Идет отправка...", foreground="blue")
     if btn_widget:
         btn_widget.config(state=tk.DISABLED)
@@ -19,7 +31,7 @@ def send_to_printer(text, status_widget, btn_widget=None):
             cmd = [
                 "powershell.exe", "-ExecutionPolicy", "Bypass", 
                 "-WindowStyle", "Hidden", "-File", ps_script, 
-                "-Text1", text
+                "-Text1", text, "-PrinterName", selected_printer
             ]
             result = subprocess.run(cmd, capture_output=True, text=True, encoding="cp866")
 
@@ -47,6 +59,13 @@ def print_batch():
     if not text:
         messagebox.showwarning("Внимание", "Пожалуйста, введите номера для печати.")
         return
+        
+    # Предотвращение случайного запуска огромной очереди печати
+    items_to_print = [n for n in re.split(r'[,;\s]+', text) if n]
+    if len(items_to_print) > 10:
+        if not messagebox.askyesno("Подтверждение", f"Вы собираетесь отправить на печать {len(items_to_print)} этикеток!\n\nВы уверены, что хотите продолжить?"):
+            return
+
     send_to_printer(text, batch_status, print_btn)
 
 def on_scan(event):
@@ -116,14 +135,25 @@ def add_context_menu(widget):
 
 window = tk.Tk()
 window.title("Печать этикеток Brother")
-window.geometry("500x480")
+window.geometry("500x520")
 window.resizable(False, False)
 
 style = ttk.Style()
 style.theme_use('clam')
 
 header = ttk.Label(window, text="🖨️ Печать этикеток", font=("Segoe UI", 16, "bold"))
-header.pack(pady=(10, 5))
+header.pack(pady=(10, 0))
+
+# Блок выбора принтера (Выпадающий список)
+printers_list = get_windows_printers()
+default_p = next((p for p in printers_list if "QL" in p.upper() or "BROTHER" in p.upper()), printers_list[0])
+
+printer_frame = ttk.Frame(window)
+printer_frame.pack(fill=tk.X, padx=20, pady=5)
+ttk.Label(printer_frame, text="Принтер:", font=("Segoe UI", 10)).pack(side=tk.LEFT)
+printer_var = tk.StringVar(value=default_p)
+printer_cb = ttk.Combobox(printer_frame, textvariable=printer_var, values=printers_list, state="readonly")
+printer_cb.pack(side=tk.RIGHT, expand=True, fill=tk.X, padx=(10, 0))
 
 notebook = ttk.Notebook(window)
 notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
