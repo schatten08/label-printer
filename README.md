@@ -22,8 +22,7 @@ The input is automatically sanitized from unwanted special characters before pri
 For macOS, the application dynamically generates barcode images and bypasses the unsupported `.lbx` templates.
 1. Open the terminal and install the required Python libraries:
    `pip3 install -r mac_version/requirements.txt`
-2. Find your exact printer name in the macOS system by running: `lpstat -p`
-3. Edit `mac_version/print_gui_mac.py` and set the `PRINTER_NAME` variable to match your printer's name.
+2. Ensure your Brother printer is added in macOS "Printers & Scanners" settings. The script will automatically detect any printer containing "Brother" or "QL" in its name via the CUPS system.
 
 ## Usage
 *The application provides two tabs/modes of operation:*

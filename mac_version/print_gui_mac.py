@@ -13,8 +13,22 @@ try:
 except ImportError:
     pass
 
-# ⚠️ ВНИМАНИЕ: Укажите точное имя принтера из настроек macOS (CUPS)
-PRINTER_NAME = "Brother_QL_810W" 
+def get_mac_printer_name():
+    """ Пытается автоматически найти принтер Brother в системе (CUPS) """
+    try:
+        result = subprocess.run(["lpstat", "-p"], capture_output=True, text=True)
+        for line in result.stdout.splitlines():
+            if "printer" in line.lower():
+                parts = line.split()
+                if len(parts) >= 2:
+                    p_name = parts[1]
+                    if "brother" in p_name.lower() or "ql" in p_name.lower():
+                        return p_name
+    except:
+        pass
+    return "Brother_QL_810W" # Фолбэк по умолчанию
+
+PRINTER_NAME = get_mac_printer_name()
 
 def play_sound(sound_type):
     \"\"\" Воспроизводит системный звук на macOS \"\"\"
@@ -53,7 +67,9 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
     def run_script():
         try:
             numbers = re.split(r'[,;\s]+', text_data)
-            
+            err_msg = result.stderr.strip() if result.stderr else "Неизвестная ошибка CUPS"
+                    window.after(0, lambda e=err_msg: messagebox.showerror("Ошибка печати", f"Скрипт сообщил об ошибке:\n{e}"))
+                    raise Exception("Ошибка принтера
             for num in numbers:
                 clean_num = num.strip()
                 if not clean_num:
