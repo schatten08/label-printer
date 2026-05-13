@@ -3,10 +3,20 @@ from tkinter import ttk, messagebox
 import subprocess
 import threading
 import os
+import re
 
 def print_labels():
     # Получаем введенные данные
-    text = text_input.get("1.0", tk.END).strip()
+    raw_text = text_input.get("1.0", tk.END).strip()
+
+    # Очищаем текст от мусорных символов (кавычки, скобки и т.д.)
+    # Оставляем только буквы, цифры, дефис, подчеркивание и разделители (пробел, перенос, запятая, точка с запятой)
+    text = re.sub(r'[^\w\s\-,;]', '', raw_text)
+
+    # Обновляем поле ввода очищенным текстом, чтобы вы видели, что именно ушло на печать
+    if text != raw_text:
+        text_input.delete("1.0", tk.END)
+        text_input.insert("1.0", text)
 
     if not text:
         messagebox.showwarning("Внимание", "Пожалуйста, введите номера для печати.")
