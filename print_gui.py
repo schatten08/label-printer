@@ -54,13 +54,28 @@ def on_scan(event):
         
     raw_dict = dict_input.get("1.0", tk.END).strip().splitlines()
     mapping = {}
-    for line in raw_dict:
-        parts = re.split(r'[\t,; ]+', line.strip())
-        parts = [p for p in parts if p]
-        if len(parts) >= 2:
-            mapping[parts[0]] = parts[1]
+    
+    for i in range(len(raw_dict)):
+        line = raw_dict[i].strip()
+        if not line:
+            continue
             
-    # Умный поиск: точное совпадение ИЛИ совпадение без префикса 'S' (добавляют некоторые сканеры)
+        # Пытаемся разбить строку по пробелам/табам/запятым (если вставили в одну строку из Excel)
+        parts = re.split(r'[\t,; ]+', line)
+        parts = [p for p in parts if p]
+        
+        if len(parts) >= 2:
+            # Классический случай: "SN Label" в одной строке
+            mapping[parts[0]] = parts[1]
+        elif len(parts) == 1 and i + 1 < len(raw_dict):
+            # Случай вертикальной вставки: "SN" на одной строке, "Label" на следующей
+            next_line_parts = re.split(r'[\t,; ]+', raw_dict[i+1].strip())
+            next_line_parts = [p for p in next_line_parts if p]
+            
+            if len(next_line_parts) >= 1:
+                mapping[parts[0]] = next_line_parts[0]
+            
+    # Умный поиск: точное совпадение ИЛИ совпадение без префикса 'S'
     if sn in mapping:
         label = mapping[sn]
     elif sn.upper().startswith('S') and sn[1:] in mapping:
