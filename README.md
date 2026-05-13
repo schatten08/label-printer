@@ -46,7 +46,7 @@ For macOS, the application dynamically generates barcode images and bypasses the
 2. Run the script: `python3 print_gui_mac.py`
 
 ## Project Structure
-- `print_gui.py` — The main graphical user interface (Python/Tkinter).
+- `windows_version/print_gui.py` — The main graphical user interface for Windows (Python/Tkinter).
 - `print.ps1` — The PowerShell script that communicates with the printer via the COM/bPAC SDK.
 - `Label.lbx` — The Brother label template.
 - `Run Label Printer.bat` — Batch script for quick UI launch.
