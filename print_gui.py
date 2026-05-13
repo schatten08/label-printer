@@ -139,11 +139,13 @@ window.title("Печать этикеток Brother")
 window.geometry("520x540")
 window.resizable(False, False)
 
-# --- Применение Темной Темы ---
-bg_color = "#202020"
-fg_color = "#E0E0E0"
-accent_color = "#007ACC"
-text_bg = "#1E1E1E"
+# --- Применение Темной Темы (Стиль VS Code) ---
+bg_color = "#252526"      # Фон окна (как боковая панель VS Code)
+fg_color = "#cccccc"      # Основной текст
+accent_color = "#0e639c"  # Синие кнопки (VS Code Blue)
+accent_hover = "#1177bb"  # Наведение на кнопку
+text_bg = "#1e1e1e"       # Фон поля ввода (как редактор VS Code)
+tab_inactive = "#2d2d2d"  # Неактивная вкладка
 
 window.configure(bg=bg_color)
 style = ttk.Style()
@@ -154,14 +156,17 @@ style.configure('.', background=bg_color, foreground=fg_color)
 style.configure('TFrame', background=bg_color)
 style.configure('TLabel', background=bg_color, foreground=fg_color, font=("Segoe UI", 10))
 style.configure('TButton', background=accent_color, foreground="white", font=("Segoe UI", 10, "bold"), padding=6, borderwidth=0)
-style.map('TButton', background=[('active', '#005999')])
-style.configure('TCombobox', fieldbackground=text_bg, background=bg_color, foreground=fg_color, arrowcolor=fg_color)
-style.map('TCombobox', fieldbackground=[('readonly', text_bg)], selectbackground=[('readonly', accent_color)])
-style.configure('TEntry', fieldbackground=text_bg, foreground=fg_color, insertcolor="white")
+style.map('TButton', background=[('active', accent_hover)])
+
+# Поля ввода и комбобоксы сделаем чуть светлее, в стиле инпутов VS Code (#3c3c3c)
+style.configure('TCombobox', fieldbackground="#3c3c3c", background=bg_color, foreground="white", arrowcolor=fg_color)
+style.map('TCombobox', fieldbackground=[('readonly', "#3c3c3c")], selectbackground=[('readonly', accent_color)])
+style.configure('TEntry', fieldbackground="#3c3c3c", foreground="white", insertcolor="white")
 
 style.configure('TNotebook', background=bg_color, borderwidth=0)
-style.configure('TNotebook.Tab', background="#333333", foreground=fg_color, padding=[15, 5], font=("Segoe UI", 10))
-style.map('TNotebook.Tab', background=[('selected', accent_color), ('active', '#444444')])
+style.configure('TNotebook.Tab', background=tab_inactive, foreground=fg_color, padding=[15, 5], font=("Segoe UI", 10))
+# Выбранная вкладка сливается с фоном редактора (text_bg)
+style.map('TNotebook.Tab', background=[('selected', text_bg), ('active', '#333333')], foreground=[('selected', 'white')])
 # -----------------------------
 
 header = ttk.Label(window, text="🖨️ Печать этикеток", font=("Segoe UI", 16, "bold"))
@@ -187,7 +192,7 @@ notebook.add(tab_batch, text=" 📝 Список (Массовая) ")
 desc_batch = ttk.Label(tab_batch, text="Введите инвентарные номера (можно таблицей):", justify="center")
 desc_batch.pack(pady=(10, 5))
 
-text_input = tk.Text(tab_batch, height=10, width=50, font=("Consolas", 11), wrap=tk.WORD, bg="#1E1E1E", fg="#E0E0E0", insertbackground="white", relief=tk.FLAT)
+text_input = tk.Text(tab_batch, height=10, width=50, font=("Consolas", 11), wrap=tk.WORD, bg="#1e1e1e", fg="#d4d4d4", insertbackground="white", relief=tk.FLAT)
 text_input.pack(pady=10, padx=20, fill=tk.BOTH, expand=True)
 add_context_menu(text_input)
 
@@ -203,7 +208,7 @@ notebook.add(tab_scan, text=" 🔍 Сканер коробок (SN -> Label) ")
 desc_dict = ttk.Label(tab_scan, text="1. Вставьте 2 колонки из Excel (SN и Label):", justify="center")
 desc_dict.pack(pady=(10, 2))
 
-dict_input = tk.Text(tab_scan, height=8, width=50, font=("Consolas", 10), wrap=tk.WORD, bg="#1E1E1E", fg="#E0E0E0", insertbackground="white", relief=tk.FLAT)
+dict_input = tk.Text(tab_scan, height=8, width=50, font=("Consolas", 10), wrap=tk.WORD, bg="#1e1e1e", fg="#d4d4d4", insertbackground="white", relief=tk.FLAT)
 dict_input.pack(pady=5, padx=20, fill=tk.BOTH, expand=True)
 add_context_menu(dict_input)
 
