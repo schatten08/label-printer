@@ -6,6 +6,15 @@ import os
 import re
 import winsound
 import ctypes
+import sys
+
+# --- Проверка на повторный запуск (Только для Windows) ---
+mutex_name = "BrotherLabelPrinter_SingleInstanceMutex"
+mutex = ctypes.windll.kernel32.CreateMutexW(None, False, mutex_name)
+last_error = ctypes.windll.kernel32.GetLastError()
+if last_error == 183:  # ERROR_ALREADY_EXISTS
+    ctypes.windll.user32.MessageBoxW(0, "Программа уже запущена!\nПожалуйста, проверьте панель задач.", "Внимание", 0x30)
+    sys.exit(0)
 
 # Отвязываем значок на панели задач от базового процесса Python (чтобы можно было закрепить именно программу)
 try:
