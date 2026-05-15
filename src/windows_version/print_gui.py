@@ -191,6 +191,10 @@ def apply_theme(theme_name):
     style.map('TCombobox', fieldbackground=[('readonly', input_bg)], selectbackground=[('readonly', accent_color)], foreground=[('readonly', input_fg)])
     style.configure('TEntry', fieldbackground=input_bg, foreground=input_fg, insertcolor=input_fg)
 
+    # Настраиваем желтый/оранжевый цвет для предупреждения, зависящий от темы
+    warning_color = "#e6a200" if theme_name == "dark" else "#d97706"
+    style.configure('Warning.TLabel', background=bg_color, foreground=warning_color, font=("Segoe UI", 9, "italic", "bold"))
+
     style.configure('TNotebook', background=bg_color, borderwidth=0)
     style.configure('TNotebook.Tab', background=tab_inactive, foreground=fg_color, padding=[15, 5], font=("Segoe UI", 10))
     style.map('TNotebook.Tab', background=[('selected', text_bg), ('active', '#333333' if theme_name=="dark" else '#d4d4d4')], foreground=[('selected', input_fg)])
@@ -224,6 +228,10 @@ ttk.Label(printer_frame, text="Принтер:", font=("Segoe UI", 10)).pack(sid
 printer_var = tk.StringVar(value=default_p)
 printer_cb = ttk.Combobox(printer_frame, textvariable=printer_var, values=printers_list, state="readonly")
 printer_cb.pack(side=tk.RIGHT, expand=True, fill=tk.X, padx=(10, 0))
+
+# Подсказка-напоминание о необходимости включить принтер
+printer_warning = ttk.Label(window, text="⚠️ Убедитесь, что принтер физически включен кнопкой питания!", style='Warning.TLabel')
+printer_warning.pack(pady=(0, 5))
 
 notebook = ttk.Notebook(window)
 notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
