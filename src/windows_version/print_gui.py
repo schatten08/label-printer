@@ -153,7 +153,7 @@ def add_context_menu(widget):
 
 window = tk.Tk()
 window.title("Печать этикеток Brother")
-window.geometry("520x540")
+window.geometry("540x570")
 window.resizable(False, False)
 
 style = ttk.Style()
@@ -187,9 +187,9 @@ def apply_theme(theme_name):
     style.configure('TButton', background=accent_color, foreground="white", font=("Segoe UI", 10, "bold"), padding=6, borderwidth=0)
     style.map('TButton', background=[('active', accent_hover)])
 
-    style.configure('TCombobox', fieldbackground=input_bg, background=bg_color, foreground=input_fg, arrowcolor=fg_color)
+    style.configure('TCombobox', fieldbackground=input_bg, background=bg_color, foreground=input_fg, arrowcolor=fg_color, padding=5)
     style.map('TCombobox', fieldbackground=[('readonly', input_bg)], selectbackground=[('readonly', accent_color)], foreground=[('readonly', input_fg)])
-    style.configure('TEntry', fieldbackground=input_bg, foreground=input_fg, insertcolor=input_fg)
+    style.configure('TEntry', fieldbackground=input_bg, foreground=input_fg, insertcolor=input_fg, padding=6)
 
     # Настраиваем желтый/оранжевый цвет для предупреждения, зависящий от темы
     warning_color = "#e6a200" if theme_name == "dark" else "#d97706"
@@ -208,7 +208,7 @@ def apply_theme(theme_name):
 # Основное меню
 menubar = tk.Menu(window)
 theme_menu = tk.Menu(menubar, tearoff=0)
-theme_menu.add_command(label="Темная (VS Code)", command=lambda: apply_theme("dark"))
+theme_menu.add_command(label="Темная", command=lambda: apply_theme("dark"))
 theme_menu.add_command(label="Светлая", command=lambda: apply_theme("light"))
 menubar.add_cascade(label="Тема", menu=theme_menu)
 window.config(menu=menubar)
@@ -242,7 +242,7 @@ notebook.add(tab_batch, text=" 📝 Список (Массовая) ")
 desc_batch = ttk.Label(tab_batch, text="Введите инвентарные номера (можно таблицей):", justify="center")
 desc_batch.pack(pady=(10, 5))
 
-text_input = tk.Text(tab_batch, height=10, width=50, font=("Consolas", 11), wrap=tk.WORD, relief=tk.FLAT)
+text_input = tk.Text(tab_batch, height=10, width=50, font=("Consolas", 11), wrap=tk.WORD, relief=tk.FLAT, padx=10, pady=10)
 text_input.pack(pady=10, padx=20, fill=tk.BOTH, expand=True)
 add_context_menu(text_input)
 
@@ -258,7 +258,7 @@ notebook.add(tab_scan, text=" 🔍 Сканер коробок (SN -> Label) ")
 desc_dict = ttk.Label(tab_scan, text="1. Вставьте 2 колонки из Excel (SN и Label):", justify="center")
 desc_dict.pack(pady=(10, 2))
 
-dict_input = tk.Text(tab_scan, height=8, width=50, font=("Consolas", 10), wrap=tk.WORD, relief=tk.FLAT)
+dict_input = tk.Text(tab_scan, height=8, width=50, font=("Consolas", 10), wrap=tk.WORD, relief=tk.FLAT, padx=10, pady=10)
 dict_input.pack(pady=5, padx=20, fill=tk.BOTH, expand=True)
 add_context_menu(dict_input)
 
