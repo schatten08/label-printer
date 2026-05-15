@@ -7,6 +7,7 @@ import re
 import winsound
 import ctypes
 import sys
+import json
 
 # --- Проверка на повторный запуск (Только для Windows) ---
 mutex_name = "BrotherLabelPrinter_SingleInstanceMutex"
@@ -156,11 +157,30 @@ window.title("Печать этикеток Brother")
 window.geometry("540x570")
 window.resizable(False, False)
 
+CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
+
+def load_theme_pref():
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                return json.load(f).get("theme", "light")
+        except Exception:
+            pass
+    return "light"
+
+def save_theme_pref(theme_name):
+    try:
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump({"theme": theme_name}, f)
+    except Exception:
+        pass
+
 style = ttk.Style()
 if 'clam' in style.theme_names():
     style.theme_use('clam')
 
 def apply_theme(theme_name):
+    save_theme_pref(theme_name)
     if theme_name == "dark":
         bg_color = "#252526"
         fg_color = "#cccccc"
@@ -213,7 +233,8 @@ theme_menu.add_command(label="Светлая", command=lambda: apply_theme("ligh
 menubar.add_cascade(label="Тема", menu=theme_menu)
 window.config(menu=menubar)
 
-apply_theme("light") # Инициализация светлой темы по умолчанию
+current_theme = load_theme_pref()
+apply_theme(current_theme) # Инициализация сохраненной темы
 
 header = ttk.Label(window, text="🖨️ Печать этикеток", font=("Segoe UI", 16, "bold"))
 header.pack(pady=(10, 0))
@@ -272,5 +293,5 @@ scan_entry.bind("<Return>", on_scan)
 scan_status = ttk.Label(tab_scan, text="", font=("Segoe UI", 10))
 scan_status.pack(pady=5)
 
-apply_theme("light") # Применяем вторично, чтобы обновить цвета у tk.Text после их создания
+apply_theme(current_theme) # Применяем вторично, чтобы обновить цвета у tk.Text после их создания
 window.mainloop()
