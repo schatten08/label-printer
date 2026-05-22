@@ -316,13 +316,13 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
                     from brother_ql.raster import BrotherQLRaster
                     
                     qlr = BrotherQLRaster('QL-810W')
-                    qlr.exception_on_warning = True
+                    # qlr.exception_on_warning = True
                     
                     instructions = convert(
                         qlr=qlr, 
                         images=[image_path], 
                         label='29',
-                        rotate='0',       
+                        rotate='90',       
                         threshold=70.0,
                         dither=False,
                         compress=True,
