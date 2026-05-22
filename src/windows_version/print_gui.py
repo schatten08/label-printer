@@ -123,6 +123,11 @@ def on_scan(event):
         label = mapping[sn[1:]]
     else:
         label = None
+        # Поиск по подстроке: сканеры с оборудования часто выдают лишние префиксы или аппаратные суффиксы ревизии (например, букву/суффикс 'F')
+        for excel_sn, excel_label in mapping.items():
+            if len(excel_sn) >= 5 and (excel_sn.upper() in sn.upper() or sn.upper() in excel_sn.upper()):
+                label = excel_label
+                break
 
     if label:
         label = re.sub(r'[^\w\s\-,;]', '', label)
