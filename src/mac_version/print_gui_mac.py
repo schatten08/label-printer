@@ -167,8 +167,9 @@ def add_context_menu(widget):
 
 window = tk.Tk()
 window.title("Mac Label Printer")
-window.geometry("500x520")
-window.resizable(False, False)
+window.geometry("540x570")
+window.minsize(540, 570)
+window.resizable(True, True)
 
 style = ttk.Style()
 if 'aqua' in style.theme_names():
@@ -352,4 +353,6 @@ def export_inventory():
 
 ttk.Button(tab_inv, text="💾 Экспорт отчета", command=export_inventory).pack(pady=10)
 
+current_lang = get_lang()
+update_texts(current_lang)
 window.mainloop()

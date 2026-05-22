@@ -161,7 +161,8 @@ def add_context_menu(widget):
 window = tk.Tk()
 window.title("Печать этикеток Brother")
 window.geometry("540x570")
-window.resizable(False, False)
+window.minsize(540, 570)
+window.resizable(True, True)
 
 CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
 
@@ -184,6 +185,87 @@ def save_theme_pref(theme_name):
 style = ttk.Style()
 if 'clam' in style.theme_names():
     style.theme_use('clam')
+
+
+LANGS = {
+    "ru": {
+        "title": "?????? ????????",
+        "printer": "???????:",
+        "warn": "?? ?????????, ??? ??????? ????????? ??????? ??????? ???????!",
+        "t_batch": " ?? ?????? (????????) ",
+        "d_batch": "??????? ??????????? ?????? (????? ????????):",
+        "btn_p": "????????? ?? ???????",
+        "t_scan": " ?? ?????? ??????? / ???????????? ",
+        "d_dict": "1. ???????? 2 ??????? ?? Excel (SN ? Label):",
+        "d_scan": "2. ????? ???? (???????? ?????????????) ? ??????????:",
+        "t_inv": " ?? ?????????????? ",
+        "i_top": "1. ???????? ???? (Label / ??????):",
+        "btn_ld": "?? ????????? ????",
+        "i_scan": "2. ??????????:",
+        "btn_ex": "?? ??????? ?????? ? CSV",
+        "c_stat": "??????",
+        "c_lbl": "Label (??????????? ?)",
+        "c_mod": "??????"
+    },
+    "en": {
+        "title": "Label Printing",
+        "printer": "Printer:",
+        "warn": "?? Make sure the printer is physically turned on!",
+        "t_batch": " ?? List (Batch) ",
+        "d_batch": "Enter inventory numbers (table format supported):",
+        "btn_p": "Send to Printer",
+        "t_scan": " ?? Equipment Scanner ",
+        "d_dict": "1. Paste 2 columns from Excel (SN and Label):",
+        "d_scan": "2. Focus here (moves automatically) and scan:",
+        "t_inv": " ?? Inventory Audit ",
+        "i_top": "1. Paste database (Label / Model):",
+        "btn_ld": "?? Load Database",
+        "i_scan": "2. Scan:",
+        "btn_ex": "?? Export to CSV",
+        "c_stat": "Status",
+        "c_lbl": "Label (Inventory ID)",
+        "c_mod": "Model"
+    }
+}
+def get_lang():
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                return json.load(f).get("lang", "ru")
+        except: pass
+    return "ru"
+
+def save_lang(lang_code):
+    try:
+        data = {}
+        if os.path.exists(CONFIG_FILE):
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f: data = json.load(f)
+        data["lang"] = lang_code
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f: json.dump(data, f)
+    except: pass
+    update_texts(lang_code)
+
+def update_texts(lang):
+    global current_lang
+    current_lang = lang
+    l = LANGS[lang]
+    header.config(text="??? " + l["title"])
+    printer_lbl.config(text=l["printer"])
+    printer_warning.config(text=l["warn"])
+    notebook.tab(0, text=l["t_batch"])
+    desc_batch.config(text=l["d_batch"])
+    print_btn.config(text=l["btn_p"])
+    notebook.tab(1, text=l["t_scan"])
+    desc_dict.config(text=l["d_dict"])
+    desc_scan.config(text=l["d_scan"])
+    notebook.tab(2, text=l["t_inv"])
+    inv_top_lbl.config(text=l["i_top"])
+    btn_load.config(text=l["btn_ld"])
+    inv_scan_lbl.config(text=l["i_scan"])
+    btn_export.config(text=l["btn_ex"])
+    inv_tree.heading("status", text=l["c_stat"])
+    inv_tree.heading("sn", text=l["c_lbl"])
+    inv_tree.heading("rest", text=l["c_mod"])
 
 def apply_theme(theme_name):
     save_theme_pref(theme_name)
@@ -445,4 +527,6 @@ def export_inventory():
 ttk.Button(tab_inv, text="💾 Экспорт отчета в CSV", command=export_inventory).pack(pady=10)
 
 apply_theme(current_theme) # Применяем вторично, чтобы обновить цвета у tk.Text после их создания
+current_lang = get_lang()
+update_texts(current_lang)
 window.mainloop()
