@@ -197,23 +197,14 @@ def generate_label_image(text_str, output_path):
     Code128 = barcode.get_barcode_class('code128')
     options = {
         "write_text": True,
-        "font_size": 24,           
-        "text_distance": 5,
-        "module_height": 16.0,     
-        "module_width": 0.4,       
-        "quiet_zone": 2.0,         
+        "font_size": 36,           
+        "text_distance": 6,
+        "module_height": 22.0,     
+        "module_width": 0.6,       
+        "quiet_zone": 1.0,         
     }
     my_bc = Code128(text_str, writer=ImageWriter())
-    saved_path = my_bc.save(output_path, options=options)
-    
-    # Поворачиваем изображение на 90 градусов, чтобы оно печаталось вдоль ленты
-    try:
-        from PIL import Image
-        img = Image.open(saved_path)
-        img = img.rotate(90, expand=True)
-        img.save(saved_path)
-    except Exception as e:
-        print("Ошибка поворота:", e)
+    my_bc.save(output_path, options=options)
 
 def send_to_printer(text_data, status_widget, btn_widget=None):
     try:
@@ -241,7 +232,7 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
                 image_path = temp_file + ".png"
                 
                 selected_printer = printer_var.get()
-                cmd = ["lpr", "-P", selected_printer, "-o", "fit-to-page", "-o", "media=Custom.29x90mm", image_path]
+                cmd = ["lpr", "-P", selected_printer, "-o", "fit-to-page", image_path]
                 result = subprocess.run(cmd, capture_output=True, text=True)
                 
                 if result.returncode != 0:
