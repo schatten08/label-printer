@@ -38,14 +38,7 @@ LANGS = {
         "i_top": "1. Вставьте базу (Label / Модель):",
         "btn_ld": "⚙️ Загрузить базу",
         "i_scan": "2. Сканируйте:",
-        "btn_ex": "💾 Экспорт отчета в CSV",        # Инициализируем пути для pyenv
-        export PATH="/Users/andrei_trokol/.pyenv/bin:/Users/andrei_trokol/.pyenv/shims:$PATH"
-        
-        # Переходим в папку мак-версии
-        cd "/Users/andrei_trokol/Downloads/label-printer/src/mac_version"
-        
-        # Запускаем скрипт
-        python3 print_gui_mac.py
+        "btn_ex": "💾 Экспорт отчета в CSV",
         "c_stat": "Статус",
         "c_lbl": "Label (Инвентарный №)",
         "c_mod": "Модель",
