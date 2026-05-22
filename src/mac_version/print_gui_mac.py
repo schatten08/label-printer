@@ -18,52 +18,52 @@ except ImportError:
 CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
 LANGS = {
     "ru": {
-        "title": "?????? ????????",
-        "printer": "???????:",
-        "warn": "?? ?????????, ??? ??????? ????????? ??????? ??????? ???????!",
-        "t_batch": " ?? ?????? (????????) ",
-        "d_batch": "??????? ??????????? ?????? (????? ????????):",
-        "btn_p": "????????? ?? ???????",
-        "t_scan": " ?? ?????? ??????? / ???????????? ",
-        "d_dict": "1. ???????? 2 ??????? ?? Excel (SN ? Label):",
-        "d_scan": "2. ????? ???? (???????? ?????????????) ? ??????????:",
-        "t_inv": " ?? ?????????????? ",
-        "i_top": "1. ???????? ???? (Label / ??????):",
-        "btn_ld": "?? ????????? ????",
-        "i_scan": "2. ??????????:",
-        "btn_ex": "?? ??????? ??????",
-        "c_stat": "??????",
-        "c_lbl": "Label (??????????? ?)",
-        "c_mod": "??????",
-        "s_pend": "? ???????",
-        "s_found": "? ???????",
-        "s_stats": "???????:",
-        "found_stat": "???????:"
+        "title": "Печать этикеток",
+        "printer": "Принтер:",
+        "warn": "⚠️ Убедитесь, что принтер физически включен кнопкой питания!",
+        "t_batch": " 📝 Список (Массовая) ",
+        "d_batch": "Введите инвентарные номера (можно таблицей):",
+        "btn_p": "Отправить на принтер",
+        "t_scan": " 🔍 Сканер коробок / оборудования ",
+        "d_dict": "1. Вставьте 2 колонки из Excel (SN и Label):",
+        "d_scan": "2. Фокус сюда (перейдет автоматически) и сканируйте:",
+        "t_inv": " 📋 Инвентаризация ",
+        "i_top": "1. Вставьте базу (Label / Модель):",
+        "btn_ld": "⚙️ Загрузить базу",
+        "i_scan": "2. Сканируйте:",
+        "btn_ex": "💾 Экспорт отчета в CSV",
+        "c_stat": "Статус",
+        "c_lbl": "Label (Инвентарный №)",
+        "c_mod": "Модель",
+        "s_pend": "❌ Ожидает",
+        "s_found": "✅ Найдено",
+        "s_stats": "Найдено:",
+        "found_stat": "Найдено:"
     },
     "en": {
         "title": "Label Printing",
         "printer": "Printer:",
-        "warn": "?? Make sure the printer is physically turned on!",
-        "t_batch": " ?? List (Batch) ",
+        "warn": "⚠️ Make sure the printer is physically turned on!",
+        "t_batch": " 📝 List (Batch) ",
         "d_batch": "Enter inventory numbers (table format supported):",
         "btn_p": "Send to Printer",
-        "t_scan": " ?? Equipment Scanner ",
+        "t_scan": " 🔍 Equipment Scanner ",
         "d_dict": "1. Paste 2 columns from Excel (SN and Label):",
         "d_scan": "2. Focus here (moves automatically) and scan:",
-        "t_inv": " ?? Inventory Audit ",
+        "t_inv": " 📋 Inventory Audit ",
         "i_top": "1. Paste database (Label / Model):",
-        "btn_ld": "?? Load Database",
+        "btn_ld": "⚙️ Load Database",
         "i_scan": "2. Scan:",
-        "btn_ex": "?? Export Report",
+        "btn_ex": "💾 Export Report",
         "c_stat": "Status",
         "c_lbl": "Label (Inventory ID)",
         "c_mod": "Model",
-        "s_pend": "? Pending",
-        "s_found": "? Found",
-        "s_stats": "Found:",
-        "found_stat": "Found:"
+        "s_pend": "❌ Pending",
+        "s_found": "✅ Found",
+        "s_stats": "Found:"
     }
 }
+
 def get_lang():
     if os.path.exists(CONFIG_FILE):
         try:
@@ -86,7 +86,7 @@ def update_texts(lang):
     global current_lang
     current_lang = lang
     l = LANGS[lang]
-    header.config(text="?? " + l["title"] + " (Mac)")
+    header.config(text="🍏 " + l["title"] + " (Mac)")
     printer_lbl.config(text=l["printer"])
     printer_warning.config(text=l["warn"])
     notebook.tab(0, text=l["t_batch"])
