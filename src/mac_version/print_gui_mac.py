@@ -10,7 +10,11 @@ from datetime import datetime
 try:
     import barcode
     from barcode.writer import ImageWriter
+    import PIL
     from PIL import Image, ImageDraw, ImageFont
+    # Monkey-patch для совместимости brother_ql со свежими версиями Pillow
+    if not hasattr(PIL.Image, 'ANTIALIAS'):
+        PIL.Image.ANTIALIAS = getattr(PIL.Image, 'Resampling', PIL.Image).LANCZOS
 except ImportError:
     pass
 
