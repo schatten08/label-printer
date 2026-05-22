@@ -234,7 +234,7 @@ notebook.add(tab_inv, text=" 📋 Инвентаризация ")
 inv_top_frame = ttk.Frame(tab_inv)
 inv_top_frame.pack(fill=tk.X, padx=10, pady=5)
 
-ttk.Label(inv_top_frame, text="1. Вставьте базу (SN / Label / И др.):").pack(side=tk.LEFT)
+ttk.Label(inv_top_frame, text="1. Вставьте базу (Label / Модель):").pack(side=tk.LEFT)
 
 inv_dict_input = tk.Text(tab_inv, height=4, font=("Menlo", 12), wrap=tk.WORD, padx=10, pady=5)
 inv_dict_input.pack(fill=tk.X, padx=10, pady=5)
@@ -273,8 +273,8 @@ ttk.Button(tab_inv, text="⚙️ Загрузить базу", command=load_inve
 columns = ("status", "sn", "rest")
 inv_tree = ttk.Treeview(tab_inv, columns=columns, show="headings", height=6)
 inv_tree.heading("status", text="Статус")
-inv_tree.heading("sn", text="SN (Серийник)")
-inv_tree.heading("rest", text="Доп. инфо")
+inv_tree.heading("sn", text="Label (Инвентарный №)")
+inv_tree.heading("rest", text="Модель")
 inv_tree.column("status", width=80, anchor=tk.CENTER)
 inv_tree.column("sn", width=150)
 inv_tree.column("rest", width=200)
@@ -342,7 +342,7 @@ def export_inventory():
     
     try:
         with open(filepath, 'w', encoding='utf-8-sig', newline='') as f:
-            f.write("Status;SN;Additional Info\n")
+            f.write("Status;Label;Model\n")
             for item in inv_tree.get_children():
                 vals = inv_tree.item(item)['values']
                 f.write(f"{vals[0]};{vals[1]};{vals[2]}\n")

@@ -311,7 +311,7 @@ notebook.add(tab_inv, text=" 📋 Инвентаризация ")
 inv_top_frame = ttk.Frame(tab_inv)
 inv_top_frame.pack(fill=tk.X, padx=10, pady=5)
 
-ttk.Label(inv_top_frame, text="1. Вставьте базу (SN / Label / И др.):").pack(side=tk.LEFT)
+ttk.Label(inv_top_frame, text="1. Вставьте базу (Label / Модель):").pack(side=tk.LEFT)
 
 inv_dict_input = tk.Text(tab_inv, height=4, font=("Consolas", 10), wrap=tk.WORD, relief=tk.FLAT, padx=10, pady=5)
 inv_dict_input.pack(fill=tk.X, padx=10, pady=5)
@@ -319,7 +319,7 @@ add_context_menu(inv_dict_input)
 
 inv_stats_var = tk.StringVar(value="Найдено: 0 / 0")
 inv_data = {} # Справочник инвентаризации
-inv_items_map = {} # Связь SN -> Treeview Item ID
+inv_items_map = {} # Связь Label -> Treeview Item ID
 
 def load_inventory():
     for item in inv_tree.get_children():
@@ -334,7 +334,7 @@ def load_inventory():
         if not parts: continue
         
         sn = parts[0]
-        # Все что после серийника - объединяем
+        # Все что после лейбла - объединяем
         rest = " | ".join(parts[1:]) if len(parts) > 1 else ""
         
         status = "❌ Ожидает"
@@ -358,8 +358,8 @@ ttk.Button(tab_inv, text="⚙️ Загрузить базу", command=load_inve
 columns = ("status", "sn", "rest")
 inv_tree = ttk.Treeview(tab_inv, columns=columns, show="headings", height=8)
 inv_tree.heading("status", text="Статус")
-inv_tree.heading("sn", text="SN (Серийник)")
-inv_tree.heading("rest", text="Доп. инфо (Label / Model)")
+inv_tree.heading("sn", text="Label (Инвентарный №)")
+inv_tree.heading("rest", text="Модель")
 inv_tree.column("status", width=80, anchor=tk.CENTER)
 inv_tree.column("sn", width=150)
 inv_tree.column("rest", width=220)
@@ -434,7 +434,7 @@ def export_inventory():
     
     try:
         with open(filepath, 'w', encoding='utf-8-sig', newline='') as f:
-            f.write("Status;SN;Additional Info\n")
+            f.write("Status;Label;Model\n")
             for item in inv_tree.get_children():
                 vals = inv_tree.item(item)['values']
                 f.write(f"{vals[0]};{vals[1]};{vals[2]}\n")
