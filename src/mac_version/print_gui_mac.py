@@ -196,36 +196,79 @@ def play_sound(sound_type):
 def generate_label_image(text_str, output_path):
     Code128 = barcode.get_barcode_class('code128')
     options = {
-        "write_text": True,
-        "font_size": 42,           
-        "text_distance": 10,
-        "module_height": 25.0,     
-        "module_width": 0.8,       
-        "quiet_zone": 1.0,         
+        "write_text": False,
+        "module_height": 15.0,
+        "module_width": 1.0,
+        "quiet_zone": 1.0,
     }
-    my_bc = Code128(text_str, writer=ImageWriter())
-    saved_path = my_bc.save(output_path, options=options)
     
-    # Создаем идеальное полотно под стандартную этикетку 90мм x 29мм (300dpi = 1062x342px)
-    # Это предотвратит обрезание и заставит CUPS растянуть штрихкод ровно по площади ленты.
+    temp_bc = output_path + "_bc.png"
+    my_bc = Code128(text_str, writer=ImageWriter())
+    my_bc.save(temp_bc, options=options)
+    
     try:
-        from PIL import Image
-        img = Image.open(saved_path)
+        from PIL import Image, ImageDraw, ImageFont
+        import os
+        bc_img = Image.open(temp_bc)
         
-        canvas_w, canvas_h = 1062, 342
-        canvas = Image.new('RGB', (canvas_w, canvas_h), 'white')
-        
-        # Если штрихкод вдруг больше холста, пропорционально уменьшаем
-        if img.width > canvas_w - 40 or img.height > canvas_h - 40:
-            # Используем LANCZOS для качественного сжатия
-            img.thumbnail((canvas_w - 40, canvas_h - 40), getattr(Image, 'Resampling', Image).LANCZOS)
+        font = None
+        font_paths = [
+            "/System/Library/Fonts/Supplemental/Times New Roman Bold.ttf",
+            "/System/Library/Fonts/Times.ttc",
+            "/Library/Fonts/Arial Bold.ttf",
+            "/System/Library/Fonts/Helvetica.ttc",
+            "/System/Library/Fonts/Menlo.ttc"
+        ]
+        font_size = 110
+        for path in font_paths:
+            try:
+                font = ImageFont.truetype(path, font_size)
+                break
+            except:
+                continue
+                
+        if not font:
+            font = ImageFont.load_default()
             
-        offset = ((canvas_w - img.width) // 2, (canvas_h - img.height) // 2)
-        canvas.paste(img, offset)
+        dummy_draw = ImageDraw.Draw(Image.new('RGB', (1,1)))
+        try:
+            bbox = font.getbbox(text_str)
+            text_w = bbox[2] - bbox[0]
+            text_h = bbox[3] - bbox[1]
+        except AttributeError:
+            text_w, text_h = dummy_draw.textsize(text_str, font=font)
+            
+        margin_x = 40
+        margin_y = 20
         
-        canvas.save(saved_path)
+        canvas_w = max(text_w, bc_img.width) + (margin_x * 2)
+        canvas_h = 342  # Высота 29мм ленты при 300dpi
+        
+        canvas = Image.new('RGB', (canvas_w, canvas_h), 'white')
+        draw = ImageDraw.Draw(canvas)
+        
+        # Печатаем текст шрифтом в верхней половине
+        text_x = (canvas_w - text_w) // 2
+        text_y = margin_y
+        draw.text((text_x, text_y), text_str, fill="black", font=font)
+        
+        # Растягиваем штрихкод без текста на всю оставшуюся нижнюю половину
+        target_bc_h = canvas_h - text_h - (margin_y * 3)
+        if target_bc_h > 0:
+            bc_res = bc_img.resize((bc_img.width, target_bc_h), getattr(Image, 'Resampling', Image).NEAREST)
+            bc_x = (canvas_w - bc_res.width) // 2
+            bc_y = text_y + text_h + margin_y
+            canvas.paste(bc_res, (bc_x, bc_y))
+
+        canvas.save(output_path)
+        
+        try:
+            os.remove(temp_bc)
+        except:
+            pass
+            
     except Exception as e:
-        print("Ошибка холста:", e)
+        print("Ошибка генерации новой этикетки:", e)
 
 def send_to_printer(text_data, status_widget, btn_widget=None):
     try:
