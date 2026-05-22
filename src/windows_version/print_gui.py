@@ -1,5 +1,5 @@
 ﻿import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 import subprocess
 import threading
 import os
@@ -8,6 +8,7 @@ import winsound
 import ctypes
 import sys
 import json
+from datetime import datetime
 
 # --- Проверка на повторный запуск (Только для Windows) ---
 mutex_name = "BrotherLabelPrinter_SingleInstanceMutex"
@@ -302,6 +303,146 @@ scan_entry.bind("<Return>", on_scan)
 
 scan_status = ttk.Label(tab_scan, text="", font=("Segoe UI", 10))
 scan_status.pack(pady=5)
+
+# --- ВКЛАДКА "ИНВЕНТАРИЗАЦИЯ" ---
+tab_inv = ttk.Frame(notebook)
+notebook.add(tab_inv, text=" 📋 Инвентаризация ")
+
+inv_top_frame = ttk.Frame(tab_inv)
+inv_top_frame.pack(fill=tk.X, padx=10, pady=5)
+
+ttk.Label(inv_top_frame, text="1. Вставьте базу (SN / Label / И др.):").pack(side=tk.LEFT)
+
+inv_dict_input = tk.Text(tab_inv, height=4, font=("Consolas", 10), wrap=tk.WORD, relief=tk.FLAT, padx=10, pady=5)
+inv_dict_input.pack(fill=tk.X, padx=10, pady=5)
+add_context_menu(inv_dict_input)
+
+inv_stats_var = tk.StringVar(value="Найдено: 0 / 0")
+inv_data = {} # Справочник инвентаризации
+inv_items_map = {} # Связь SN -> Treeview Item ID
+
+def load_inventory():
+    for item in inv_tree.get_children():
+        inv_tree.delete(item)
+    inv_data.clear()
+    inv_items_map.clear()
+    
+    raw_text = inv_dict_input.get("1.0", tk.END).strip().split('\n')
+    for line in raw_text:
+        parts = re.split(r'[\t,;]+', line.strip()) # Разделяем по табам или точкам с запятой
+        parts = [p.strip() for p in parts if p.strip()]
+        if not parts: continue
+        
+        sn = parts[0]
+        # Все что после серийника - объединяем
+        rest = " | ".join(parts[1:]) if len(parts) > 1 else ""
+        
+        status = "❌ Ожидает"
+        item_id = inv_tree.insert("", tk.END, values=(status, sn, rest))
+        
+        # Сохраняем в память
+        inv_data[sn] = {
+            "status": status,
+            "sn": sn,
+            "rest": rest,
+            "item_id": item_id
+        }
+        inv_items_map[sn] = item_id
+
+    update_inv_stats()
+    inv_scan_entry.focus()
+
+ttk.Button(tab_inv, text="⚙️ Загрузить базу", command=load_inventory).pack(pady=2)
+
+# Таблица инвентаризации
+columns = ("status", "sn", "rest")
+inv_tree = ttk.Treeview(tab_inv, columns=columns, show="headings", height=8)
+inv_tree.heading("status", text="Статус")
+inv_tree.heading("sn", text="SN (Серийник)")
+inv_tree.heading("rest", text="Доп. инфо (Label / Model)")
+inv_tree.column("status", width=80, anchor=tk.CENTER)
+inv_tree.column("sn", width=150)
+inv_tree.column("rest", width=220)
+inv_tree.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+
+# Тег для подсветки найденных строк (светло-зеленый)
+inv_tree.tag_configure('found', background='#abf7b1', foreground='black')
+
+inv_scan_frame = ttk.Frame(tab_inv)
+inv_scan_frame.pack(fill=tk.X, padx=10, pady=5)
+
+ttk.Label(inv_scan_frame, text="2. Сканируйте:").pack(side=tk.LEFT)
+inv_scan_entry = ttk.Entry(inv_scan_frame, font=("Consolas", 14), width=25)
+inv_scan_entry.pack(side=tk.LEFT, padx=10)
+
+ttk.Label(inv_scan_frame, textvariable=inv_stats_var, font=("Segoe UI", 10, "bold")).pack(side=tk.RIGHT)
+
+def update_inv_stats():
+    total = len(inv_data)
+    found = sum(1 for v in inv_data.values() if "Найдено" in v["status"])
+    inv_stats_var.set(f"Найдено: {found} / {total}")
+
+def on_inv_scan(event):
+    sn = inv_scan_entry.get().strip()
+    inv_scan_entry.delete(0, tk.END)
+    if not sn: return
+    
+    target_id = None
+    
+    # Прямой поиск
+    if sn in inv_items_map:
+        target_id = inv_items_map[sn]
+    elif sn.upper().startswith('S') and sn[1:] in inv_items_map:
+        target_id = inv_items_map[sn[1:]]
+    else:
+        # Умный поиск (подстрока от 5 символов)
+        for excel_sn, item_id in inv_items_map.items():
+            if len(excel_sn) >= 5 and (excel_sn.upper() in sn.upper() or sn.upper() in excel_sn.upper()):
+                target_id = item_id
+                break
+                
+    if target_id:
+        item_data = inv_tree.item(target_id)
+        sn_key = item_data['values'][1] # Достаем оригинальный отображаемый SN
+        
+        # Закрашиваем строку и меняем статус
+        inv_tree.item(target_id, values=("✅ Найдено", sn_key, item_data['values'][2]), tags=('found',))
+        
+        # Обновляем память
+        for k, v in inv_data.items():
+            if v['item_id'] == target_id:
+                v["status"] = "✅ Найдено"
+                break
+                
+        inv_tree.see(target_id)
+        update_inv_stats()
+        threading.Thread(target=play_sound, args=("success",), daemon=True).start()
+    else:
+        threading.Thread(target=play_sound, args=("error",), daemon=True).start()
+        messagebox.showwarning("Не найдено", f"Оборудование не из списка!\nОтсканировано: {sn}")
+
+inv_scan_entry.bind("<Return>", on_inv_scan)
+
+def export_inventory():
+    if not inv_data:
+        messagebox.showinfo("Пусто", "Нет данных для экспорта.")
+        return
+        
+    default_name = f"inventory_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv"
+    filepath = filedialog.asksaveasfilename(defaultextension=".csv", initialfile=default_name, filetypes=[("CSV файлы", "*.csv"), ("Текстовые файлы", "*.txt")])
+    if not filepath: return
+    
+    try:
+        with open(filepath, 'w', encoding='utf-8-sig', newline='') as f:
+            f.write("Status;SN;Additional Info\n")
+            for item in inv_tree.get_children():
+                vals = inv_tree.item(item)['values']
+                f.write(f"{vals[0]};{vals[1]};{vals[2]}\n")
+        messagebox.showinfo("Сохранено", f"Отчет успешно сохранен в:\n{filepath}")
+    except Exception as e:
+        messagebox.showerror("Ошибка", f"Не удалось сохранить файл:\n{e}")
+
+ttk.Button(tab_inv, text="💾 Экспорт отчета в CSV", command=export_inventory).pack(pady=10)
 
 apply_theme(current_theme) # Применяем вторично, чтобы обновить цвета у tk.Text после их создания
 window.mainloop()
