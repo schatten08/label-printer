@@ -8,6 +8,9 @@ import tempfile
 from datetime import datetime
 
 try:
+    import warnings
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    
     import barcode
     from barcode.writer import ImageWriter
     import PIL
