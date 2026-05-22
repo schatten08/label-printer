@@ -177,8 +177,16 @@ def load_theme_pref():
 
 def save_theme_pref(theme_name):
     try:
+        data = {}
+        if os.path.exists(CONFIG_FILE):
+            try:
+                with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+            except Exception:
+                pass
+        data["theme"] = theme_name
         with open(CONFIG_FILE, "w", encoding="utf-8") as f:
-            json.dump({"theme": theme_name}, f)
+            json.dump(data, f)
     except Exception:
         pass
 
