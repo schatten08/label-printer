@@ -299,7 +299,24 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
     def run_script():
         try:
             numbers = re.split(r'[,;\s]+', text_data)
+            selected_printer = printer_var.get()
             
+            # Читаем доступные размеры ленты из драйвера принтера!
+            media_opts = ""
+            try:
+                out = subprocess.check_output(["lpoptions", "-p", selected_printer, "-l"], text=True)
+                # Ищем что-то похожее на 29mm
+                for line in out.splitlines():
+                    if "PageSize" in line or "media" in line.lower():
+                        # Ищем опцию для 29mm (напр. 29mm, 29x90, 29x90mm, 29x15_24)
+                        opts = line.split(":")[-1].strip().split()
+                        for opt in opts:
+                            if "29" in opt:
+                                media_opts = opt.replace("*", "")
+                                break
+            except:
+                pass
+                
             for num in numbers:
                 clean_num = num.strip()
                 if not clean_num:
@@ -308,13 +325,17 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
                 temp_file = os.path.join(tempfile.gettempdir(), f"label_{clean_num}")
                 generate_label_image(clean_num, temp_file)
                 image_path = temp_file + ".png"
-                pdf_path = temp_file + ".pdf"
                 
-                selected_printer = printer_var.get()
-                
-                # Мы используем PDF вместо PNG.
-                # PDF имеет точные физические размеры, рассчитанные из DPI, что заставляет Mac CUPS печатать пиксель-в-пиксель.
-                cmd = ["lp", "-d", selected_printer, "-o", "fit-to-page", pdf_path]
+                # Печатаем через lp с точным указанием размера ленты
+                # Если media_opts найден, принтер перестанет моргать красным, т.к. размер совпадет с установленным
+                cmd = ["lp", "-d", selected_printer, "-o", "fit-to-page"]
+                if media_opts:
+                    cmd.extend(["-o", f"media={media_opts}"])
+                else:
+                    # Резервный вариант, если в lpoptions ничего не нашли
+                    cmd.extend(["-o", "media=29x90mm"])
+                    
+                cmd.append(image_path)
                 
                 result = subprocess.run(cmd, capture_output=True, text=True)
                 
@@ -325,7 +346,6 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
                 try:
                     import os
                     os.remove(image_path)
-                    os.remove(pdf_path)
                 except:
                     pass
                     
