@@ -344,7 +344,6 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
                     window.after(0, lambda e=err_msg: messagebox.showerror("Ошибка печати", f"Скрипт сообщил об ошибке:\n{e}"))
                 
                 try:
-                    import os
                     os.remove(image_path)
                 except:
                     pass
