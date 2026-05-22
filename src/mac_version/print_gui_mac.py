@@ -204,8 +204,8 @@ def generate_label_image(text_str, output_path):
     Code128 = barcode.get_barcode_class('code128')
     options = {
         "write_text": False,
-        "module_height": 7.0,   # Компактный "офисный" размер штрихкода как на идеальной этикетке
-        "module_width": 0.4,    
+        "module_height": 18.0,   # Значительно увеличил высоту штрихкода как на эталоне
+        "module_width": 1.0,     # Сделал его шире
         "quiet_zone": 1.0,
     }
     
@@ -224,7 +224,7 @@ def generate_label_image(text_str, output_path):
             "/System/Library/Fonts/Times.ttc",
             "/Library/Fonts/Times New Roman.ttf"
         ]
-        font_size = 50 # Идеальный компактный шрифт
+        font_size = 100 # Крупный, читаемый шрифт как на оригинале
         for fp in font_paths:
             try:
                 import os
@@ -237,12 +237,10 @@ def generate_label_image(text_str, output_path):
         if not font:
             font = ImageFont.load_default()
             
-        # ЖЕСТКАЯ ПРИВЯЗКА ШИРИНЫ К ЛЕНТЕ 62ММ (696 ПИКСЕЛЕЙ).
-        # brother_ql при rotate='0' требует, чтобы ширина картинки до пикселя равнялась 696.
         canvas_w = 696 
         
-        # Меняем "Epam" на "EPAm" как на эталонном фото (опционально, но пусть будет как на оригинале)
-        top_text = f"EPAm {text_str}"
+        # Оставляем строго EPAM (заглавными)
+        top_text = f"EPAM {text_str}"
         
         dummy_draw = ImageDraw.Draw(Image.new('RGB', (1,1)))
         try:
@@ -252,26 +250,30 @@ def generate_label_image(text_str, output_path):
         except AttributeError:
             text_w, text_h = dummy_draw.textsize(top_text, font=font)
         
-        # Высота этикетки будет минимальной! Никаких гигантских отступов.
-        # Лента просто отрежется нужной длины.
-        margin_y = 25
-        spacing = 10
-        canvas_h = text_h + bc_img.height + spacing + (margin_y * 2) 
+        # Минимизируем пустое пространство (отступы) сверху и снизу
+        margin_y = 15
+        spacing = 5
+        
+        # Если штрихкод все равно мал по ширине по-сравнению с текстом, можно его немного растянуть
+        bc_target_w = max(int(text_w * 1.1), bc_img.width) # Штрихкод чуть шире текста
+        bc_target_w = min(bc_target_w, canvas_w - 40) # Но не шире самой ленты
+        
+        bc_target_h = int(bc_img.height * (bc_target_w / bc_img.width)) if bc_img.width else bc_img.height
+        bc_res = bc_img.resize((bc_target_w, bc_target_h), getattr(Image, 'Resampling', Image).NEAREST)
+
+        canvas_h = text_h + bc_res.height + spacing + (margin_y * 2)
         
         canvas = Image.new('RGB', (canvas_w, canvas_h), 'white')
         draw = ImageDraw.Draw(canvas)
         
-        # Центрируем текст по оси X (ширина ленты)
         text_x = (canvas_w - text_w) // 2
         text_y = margin_y
         draw.text((text_x, text_y), top_text, fill="black", font=font)
         
-        # Центрируем штрихкод по оси X (ширина ленты)
-        bc_x = (canvas_w - bc_img.width) // 2
+        bc_x = (canvas_w - bc_res.width) // 2
         bc_y = text_y + text_h + spacing
-        canvas.paste(bc_img, (bc_x, bc_y))
+        canvas.paste(bc_res, (bc_x, bc_y))
 
-        # Сохраняем как есть (ширина 696, высота маленькая). НИКАКОГО ВРАЩЕНИЯ!
         canvas.save(output_path + ".png", "PNG", dpi=(300.0, 300.0))
         
         try:
