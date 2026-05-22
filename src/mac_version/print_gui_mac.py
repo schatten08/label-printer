@@ -195,12 +195,14 @@ def play_sound(sound_type):
 
 def generate_label_image(text_str, output_path):
     Code128 = barcode.get_barcode_class('code128')
+    # Увеличиваем высоту штрихкода и размер текста, чтобы они заполняли этикетку
     options = {
         "write_text": True,
-        "font_size": 14,
-        "text_distance": 4,
-        "module_height": 10.0,
-        "quiet_zone": 3.0
+        "font_size": 20,           # Было 14
+        "text_distance": 5,
+        "module_height": 25.0,     # Было 10.0 - увеличиваем высоту полос
+        "module_width": 0.3,       # Увеличиваем ширину полос
+        "quiet_zone": 1.0,         # Уменьшаем пустые поля по бокам
     }
     my_bc = Code128(text_str, writer=ImageWriter())
     my_bc.save(output_path, options=options)
