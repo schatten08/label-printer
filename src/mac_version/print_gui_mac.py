@@ -202,14 +202,16 @@ def generate_label_image(text_str, output_path):
         "quiet_zone": 1.0,
     }
     
-    temp_bc = output_path + "_bc.png"
+    temp_bc_base = output_path + "_bc"
+    temp_bc_full = temp_bc_base + ".png"
     my_bc = Code128(text_str, writer=ImageWriter())
-    my_bc.save(temp_bc, options=options)
+    my_bc.save(temp_bc_base, options=options)
     
     try:
         from PIL import Image, ImageDraw, ImageFont
         import os
-        bc_img = Image.open(temp_bc)
+        bc_img = Image.open(temp_bc_full)
+
         
         font = None
         font_paths = [
@@ -263,7 +265,7 @@ def generate_label_image(text_str, output_path):
         canvas.save(output_path)
         
         try:
-            os.remove(temp_bc)
+            os.remove(temp_bc_full)
         except:
             pass
             
