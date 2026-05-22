@@ -233,6 +233,9 @@ LANGS = {
         "c_stat": "Status",
         "c_lbl": "Label (Inventory ID)",
         "c_mod": "Model",
+        "s_pend": "? Pending",
+        "s_found": "? Found",
+        "s_stats": "Found:",
         "found_stat": "Found:"
     }
 }
@@ -275,6 +278,17 @@ def update_texts(lang):
     inv_tree.heading("status", text=l["c_stat"])
     inv_tree.heading("sn", text=l["c_lbl"])
     inv_tree.heading("rest", text=l["c_mod"])
+    # Update inventory contents on lang switch
+    if 'inv_tree' in globals() and 'inv_data' in globals():
+        for sn, data in inv_data.items():
+            if "???????" in data["status"] or "Found" in data["status"]:
+                data["status"] = l["s_found"]
+            else:
+                data["status"] = l["s_pend"]
+            inv_tree.set(data["item_id"], "status", data["status"])
+        if 'update_inv_stats' in globals():
+            update_inv_stats()
+
     update_inv_stats()
 
 def apply_theme(theme_name):
