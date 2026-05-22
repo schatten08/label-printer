@@ -270,7 +270,7 @@ def generate_label_image(text_str, output_path):
         # Разворачиваем итоговый холст на 90 градусов (книжная ориентация), 
         # чтобы драйвер принтера вытянул его по длине ленты (ширина принтера = 29мм -> 342px)
         canvas = canvas.rotate(90, expand=True)
-        canvas.save(output_path + ".png")
+        canvas.save(output_path + ".png", dpi=(300, 300))
         
         try:
             os.remove(temp_bc_full)
