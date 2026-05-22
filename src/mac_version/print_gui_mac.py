@@ -307,83 +307,51 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
                 
                 selected_printer = printer_var.get()
                 
-                  # Используем независимый открытый SDK (brother_ql) вместо глючного драйвера macOS CUPS
-                  try:
-                      import os
-                      from brother_ql.conversion import convert
-                      from brother_ql.raster import BrotherQLRaster
-                      
-                      qlr = BrotherQLRaster('QL-810W')
-                      qlr.exception_on_warning = True
-                      
-                      # Транслируем картинку в чистый двоичный машинный код принтера
-                      instructions = convert(
-                          qlr=qlr, 
-                          images=[image_path], 
-                          label='29',       # Указываем 29мм ленту
-                          rotate='0',       
-                          threshold=70.0,
-                          dither=False,
-                          compress=True,
-                          red=False
-                      )
-                      
-                      bin_path = image_path + ".bin"
-                      with open(bin_path, 'wb') as f:
-                          f.write(instructions)
-                          
-                      # Отправляем сырой код прямо на интерфейс принтера (-l = RAW format)
-                      cmd = ["lpr", "-P", selected_printer, "-l", bin_path]
-                  except Exception as e:
-                      # Если что-то пошло не так, падаем в классический способ
-                      print("brother_ql error:", e)
-                      
-                  # Используем независимый открытый SDK (brother_ql) вместо глючного драйвера macOS CUPS
-                  try:
-                      import os
-                      from brother_ql.conversion import convert
-                      from brother_ql.raster import BrotherQLRaster
-                      
-                      qlr = BrotherQLRaster('QL-810W')
-                      qlr.exception_on_warning = True
-                      
-                      # Транслируем картинку в чистый двоичный машинный код принтера
-                      instructions = convert(
-                          qlr=qlr, 
-                          images=[image_path], 
-                          label='29',       # Указываем 29мм ленту
-                          rotate='0',       
-                          threshold=70.0,
-                          dither=False,
-                          compress=True,
-                          red=False
-                      )
-                      
-                      bin_path = image_path + ".bin"
-                      with open(bin_path, 'wb') as f:
-                          f.write(instructions)
-                          
-                      # Отправляем сырой код прямо на интерфейс принтера (-l = RAW format)
-                      cmd = ["lpr", "-P", selected_printer, "-l", bin_path]
-                  except Exception as e:
-                      # Если что-то пошло не так, падаем в классический способ
-                      print("brother_ql error:", e)
-                      cmd = ["lpr", "-P", selected_printer, "-o", "natural-scaling=100", image_path]
-
-
+                try:
+                    import os
+                    from brother_ql.conversion import convert
+                    from brother_ql.raster import BrotherQLRaster
+                    
+                    qlr = BrotherQLRaster('QL-810W')
+                    qlr.exception_on_warning = True
+                    
+                    instructions = convert(
+                        qlr=qlr, 
+                        images=[image_path], 
+                        label='29',
+                        rotate='0',       
+                        threshold=70.0,
+                        dither=False,
+                        compress=True,
+                        red=False
+                    )
+                    
+                    bin_path = image_path + ".bin"
+                    with open(bin_path, 'wb') as f:
+                        f.write(instructions)
+                        
+                    cmd = ["lpr", "-P", selected_printer, "-l", bin_path]
+                except Exception as e:
+                    print("brother_ql error:", e)
+                    cmd = ["lpr", "-P", selected_printer, "-o", "natural-scaling=100", image_path]
+                
                 result = subprocess.run(cmd, capture_output=True, text=True)
                 
                 if result.returncode != 0:
                     err_msg = result.stderr.strip() if result.stderr else "Неизвестная ошибка CUPS"
                     window.after(0, lambda e=err_msg: messagebox.showerror("Ошибка печати", f"Скрипт сообщил об ошибке:\n{e}"))
-                    raise Exception("Ошибка принтера")
                 
-                try: os.remove(image_path)
-                except: pass
-
-            window.after(0, lambda: status_widget.config(text="✅ Отправлено в печать!", foreground="green"))
+                try:
+                    os.remove(image_path)
+                    os.remove(image_path + ".bin")
+                except:
+                    pass
+                    
+            window.after(0, lambda: status_widget.config(text="✅ Успешно отправлено!", foreground="green"))
+            window.after(3000, lambda: status_widget.config(text=""))
         except Exception as e:
-            window.after(0, lambda err=e: status_widget.config(text=f"❌ Ошибка печати: {err}", foreground="red"))
+            window.after(0, lambda e=e: messagebox.showerror("Системная ошибка", f"Детали:\n{e}"))
+            window.after(0, lambda: status_widget.config(text="❌ Ошибка", foreground="red"))
         finally:
             if btn_widget:
                 window.after(0, lambda: btn_widget.config(state=tk.NORMAL))
