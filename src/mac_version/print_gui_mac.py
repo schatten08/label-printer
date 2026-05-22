@@ -177,6 +177,14 @@ if 'aqua' in style.theme_names():
 else:
     style.theme_use('default')
 
+# Основное меню
+menubar = tk.Menu(window)
+lang_menu = tk.Menu(menubar, tearoff=0)
+lang_menu.add_command(label="🇷🇺 Русский", command=lambda: save_lang("ru"))
+lang_menu.add_command(label="🇬🇧 English", command=lambda: save_lang("en"))
+menubar.add_cascade(label="Язык", menu=lang_menu)
+window.config(menu=menubar)
+
 header = ttk.Label(window, text="🍏 Печать этикеток (Mac)", font=("Helvetica", 16, "bold"))
 header.pack(pady=(10, 0))
 
