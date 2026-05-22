@@ -38,7 +38,14 @@ LANGS = {
         "i_top": "1. Вставьте базу (Label / Модель):",
         "btn_ld": "⚙️ Загрузить базу",
         "i_scan": "2. Сканируйте:",
-        "btn_ex": "💾 Экспорт отчета в CSV",
+        "btn_ex": "💾 Экспорт отчета в CSV",        # Инициализируем пути для pyenv
+        export PATH="/Users/andrei_trokol/.pyenv/bin:/Users/andrei_trokol/.pyenv/shims:$PATH"
+        
+        # Переходим в папку мак-версии
+        cd "/Users/andrei_trokol/Downloads/label-printer/src/mac_version"
+        
+        # Запускаем скрипт
+        python3 print_gui_mac.py
         "c_stat": "Статус",
         "c_lbl": "Label (Инвентарный №)",
         "c_mod": "Модель",
@@ -204,9 +211,9 @@ def generate_label_image(text_str, output_path):
     Code128 = barcode.get_barcode_class('code128')
     options = {
         "write_text": False,
-        "module_height": 9.0,   
-        "module_width": 0.5,    # Делаем сам штрихкод плотнее и компактнее
-        "quiet_zone": 0.0,      # Отключаем встроенные отступы самого штрихкода!
+        "module_height": 8.0,   
+        "module_width": 0.3,    
+        "quiet_zone": 0.0,      
     }
     
     temp_bc = output_path + "_bc"
@@ -224,7 +231,7 @@ def generate_label_image(text_str, output_path):
             "/System/Library/Fonts/Times.ttc",
             "/Library/Fonts/Times New Roman.ttf"
         ]
-        font_size = 65 # Делаем шрифт максимально похожим на эталонный
+        font_size = 45 
         for fp in font_paths:
             try:
                 import os
@@ -238,7 +245,7 @@ def generate_label_image(text_str, output_path):
             font = ImageFont.load_default()
             
         canvas_w = 696 
-        top_text = f"EPAM {text_str}"
+        top_text = f"EPAm {text_str}"
         
         dummy_draw = ImageDraw.Draw(Image.new('RGB', (1,1)))
         try:
@@ -249,22 +256,24 @@ def generate_label_image(text_str, output_path):
             text_w, text_h = dummy_draw.textsize(top_text, font=font)
             text_h = max(text_h, font_size)
         
-        # Абсолютно в ноль убираем пустые поля
-        margin_y = 0
-        spacing = 5
+        # Добавляем отступы (padding), чтобы этикетка визуально была 1-в-1 как в Windows
+        margin_y = 50
+        spacing = 15
         
-        canvas_h = text_h + bc_img.height + spacing + (margin_y * 2)
+        # Общая высота. Минимальная ширина реза принтера около 1 дюйма (300px).
+        content_h = text_h + bc_img.height + spacing
+        canvas_h = max(290, content_h + (margin_y * 2))
+        
+        margin_y = (canvas_h - content_h) // 2
         
         canvas = Image.new('RGB', (canvas_w, canvas_h), 'white')
         draw = ImageDraw.Draw(canvas)
         
         text_x = (canvas_w - text_w) // 2
-        text_y = margin_y
-        draw.text((text_x, text_y), top_text, fill="black", font=font)
+        draw.text((text_x, margin_y), top_text, fill="black", font=font)
         
         bc_x = (canvas_w - bc_img.width) // 2
-        bc_y = text_y + text_h + spacing
-        canvas.paste(bc_img, (bc_x, bc_y))
+        canvas.paste(bc_img, (bc_x, margin_y + text_h + spacing))
 
         canvas.save(output_path + ".png", "PNG", dpi=(300.0, 300.0))
         
