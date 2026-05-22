@@ -229,7 +229,7 @@ def generate_label_image(text_str, output_path):
             font = ImageFont.load_default()
             
         # Задаем размер полотна (29мм в высоту ~ 342px при 300dpi, ширина динамическая, но не менее 1200)
-        canvas_h = 342
+        canvas_h = 306
         
         # Строка текста сверху: "Epam " + сам номер
         top_text = f"Epam {text_str}"
@@ -285,7 +285,7 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
         import barcode
         from PIL import Image
     except ImportError:
-        messagebox.showerror("Ошибка", "Для работы установите библиотеки: pip3 install python-barcode Pillow")
+        messagebox.showerror("Ошибка", "Для работы установите библиотеки: pip3 install python-barcode Pillow brother_ql")
         return
 
     status_widget.config(text="⏳ Идет отправка...", foreground="blue")
@@ -306,7 +306,71 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
                 image_path = temp_file + ".png"
                 
                 selected_printer = printer_var.get()
-                cmd = ["lpr", "-P", selected_printer, "-o", "natural-scaling=100", image_path]
+                
+                  # Используем независимый открытый SDK (brother_ql) вместо глючного драйвера macOS CUPS
+                  try:
+                      import os
+                      from brother_ql.conversion import convert
+                      from brother_ql.raster import BrotherQLRaster
+                      
+                      qlr = BrotherQLRaster('QL-810W')
+                      qlr.exception_on_warning = True
+                      
+                      # Транслируем картинку в чистый двоичный машинный код принтера
+                      instructions = convert(
+                          qlr=qlr, 
+                          images=[image_path], 
+                          label='29',       # Указываем 29мм ленту
+                          rotate='0',       
+                          threshold=70.0,
+                          dither=False,
+                          compress=True,
+                          red=False
+                      )
+                      
+                      bin_path = image_path + ".bin"
+                      with open(bin_path, 'wb') as f:
+                          f.write(instructions)
+                          
+                      # Отправляем сырой код прямо на интерфейс принтера (-l = RAW format)
+                      cmd = ["lpr", "-P", selected_printer, "-l", bin_path]
+                  except Exception as e:
+                      # Если что-то пошло не так, падаем в классический способ
+                      print("brother_ql error:", e)
+                      
+                  # Используем независимый открытый SDK (brother_ql) вместо глючного драйвера macOS CUPS
+                  try:
+                      import os
+                      from brother_ql.conversion import convert
+                      from brother_ql.raster import BrotherQLRaster
+                      
+                      qlr = BrotherQLRaster('QL-810W')
+                      qlr.exception_on_warning = True
+                      
+                      # Транслируем картинку в чистый двоичный машинный код принтера
+                      instructions = convert(
+                          qlr=qlr, 
+                          images=[image_path], 
+                          label='29',       # Указываем 29мм ленту
+                          rotate='0',       
+                          threshold=70.0,
+                          dither=False,
+                          compress=True,
+                          red=False
+                      )
+                      
+                      bin_path = image_path + ".bin"
+                      with open(bin_path, 'wb') as f:
+                          f.write(instructions)
+                          
+                      # Отправляем сырой код прямо на интерфейс принтера (-l = RAW format)
+                      cmd = ["lpr", "-P", selected_printer, "-l", bin_path]
+                  except Exception as e:
+                      # Если что-то пошло не так, падаем в классический способ
+                      print("brother_ql error:", e)
+                      cmd = ["lpr", "-P", selected_printer, "-o", "natural-scaling=100", image_path]
+
+
                 result = subprocess.run(cmd, capture_output=True, text=True)
                 
                 if result.returncode != 0:
