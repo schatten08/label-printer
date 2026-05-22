@@ -264,6 +264,12 @@ def generate_label_image(text_str, output_path):
             bc_y = text_y + text_h + 10  # Сразу под текстом
             canvas.paste(bc_res, (bc_x, bc_y))
 
+        # Разворачиваем итоговый холст на 90 градусов (книжная ориентация), 
+        # чтобы драйвер принтера вытянул его по длине ленты (ширина принтера = 29мм -> 342px)
+        canvas = canvas.rotate(90, expand=True)
+        # Разворачиваем итоговый холст на 90 градусов (книжная ориентация), 
+        # чтобы драйвер принтера вытянул его по длине ленты (ширина принтера = 29мм -> 342px)
+        canvas = canvas.rotate(90, expand=True)
         canvas.save(output_path + ".png")
         
         try:
