@@ -204,8 +204,8 @@ def generate_label_image(text_str, output_path):
     Code128 = barcode.get_barcode_class('code128')
     options = {
         "write_text": False,
-        "module_height": 10.0, # Родной, приятный размер штрихкода (без гигантизма)
-        "module_width": 0.7,   
+        "module_height": 7.0,   # Компактный "офисный" размер штрихкода как на идеальной этикетке
+        "module_width": 0.4,    
         "quiet_zone": 1.0,
     }
     
@@ -221,9 +221,10 @@ def generate_label_image(text_str, output_path):
         font = None
         font_paths = [
             "/System/Library/Fonts/Supplemental/Times New Roman Bold.ttf",
-            "/System/Library/Fonts/Times.ttc"
+            "/System/Library/Fonts/Times.ttc",
+            "/Library/Fonts/Times New Roman.ttf"
         ]
-        font_size = 85 # Возвращаем адекватный размер текста (~7 миллиметров высотой)
+        font_size = 50 # Идеальный компактный шрифт
         for fp in font_paths:
             try:
                 import os
@@ -236,8 +237,12 @@ def generate_label_image(text_str, output_path):
         if not font:
             font = ImageFont.load_default()
             
-        canvas_h = 696 # Ширина 62мм ленты ПРИНТЕРА остается 696, чтобы brother_ql не масштабировал!
-        top_text = f"Epam {text_str}"
+        # ЖЕСТКАЯ ПРИВЯЗКА ШИРИНЫ К ЛЕНТЕ 62ММ (696 ПИКСЕЛЕЙ).
+        # brother_ql при rotate='0' требует, чтобы ширина картинки до пикселя равнялась 696.
+        canvas_w = 696 
+        
+        # Меняем "Epam" на "EPAm" как на эталонном фото (опционально, но пусть будет как на оригинале)
+        top_text = f"EPAm {text_str}"
         
         dummy_draw = ImageDraw.Draw(Image.new('RGB', (1,1)))
         try:
@@ -247,25 +252,26 @@ def generate_label_image(text_str, output_path):
         except AttributeError:
             text_w, text_h = dummy_draw.textsize(top_text, font=font)
         
-        margin = 100
-        canvas_w = max(text_w, bc_img.width) + (margin * 2) 
+        # Высота этикетки будет минимальной! Никаких гигантских отступов.
+        # Лента просто отрежется нужной длины.
+        margin_y = 25
+        spacing = 10
+        canvas_h = text_h + bc_img.height + spacing + (margin_y * 2) 
         
         canvas = Image.new('RGB', (canvas_w, canvas_h), 'white')
         draw = ImageDraw.Draw(canvas)
         
-        # Центрируем весь блок посередине 62мм ленты по вертикали
-        content_h = text_h + 15 + bc_img.height
-        start_y = (canvas_h - content_h) // 2
-        
+        # Центрируем текст по оси X (ширина ленты)
         text_x = (canvas_w - text_w) // 2
-        text_y = start_y
+        text_y = margin_y
         draw.text((text_x, text_y), top_text, fill="black", font=font)
         
+        # Центрируем штрихкод по оси X (ширина ленты)
         bc_x = (canvas_w - bc_img.width) // 2
-        bc_y = text_y + text_h + 15
+        bc_y = text_y + text_h + spacing
         canvas.paste(bc_img, (bc_x, bc_y))
 
-        # Выгружаем, драйвер brother_ql сам перевернет это на 90 градусов (rotate='90')
+        # Сохраняем как есть (ширина 696, высота маленькая). НИКАКОГО ВРАЩЕНИЯ!
         canvas.save(output_path + ".png", "PNG", dpi=(300.0, 300.0))
         
         try:
@@ -319,13 +325,12 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
                     from brother_ql.raster import BrotherQLRaster
                     
                     qlr = BrotherQLRaster('QL-810W')
-                    # qlr.exception_on_warning = True
                     
                     instructions = convert(
                         qlr=qlr, 
                         images=[image_path], 
-                        label='62', # Укажем ленту 62mm!
-                        rotate='90',       
+                        label='62', # Лента 62mm
+                        rotate='0', # НУЛЕВОЙ поворот! Наша картинка ровно 696px в ширину. 
                         threshold=70.0,
                         dither=False,
                         compress=True,
@@ -335,7 +340,7 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
                     with open(bin_path, 'wb') as f:
                         f.write(instructions)
                         
-                    # Отправляем RAW-байткод
+                    # -o raw передает машинный код в принтер без изменений!
                     cmd = ["lp", "-d", selected_printer, "-o", "raw", bin_path]
                 except Exception as e:
                     print("Brother_ql error:", e)
