@@ -279,7 +279,7 @@ batch_status = ttk.Label(tab_batch, text="", font=("Segoe UI", 10))
 batch_status.pack(pady=5)
 
 tab_scan = ttk.Frame(notebook)
-notebook.add(tab_scan, text=" 🔍 Сканер коробок (SN -> Label) ")
+notebook.add(tab_scan, text=" 🔍 Сканер коробок / оборудования ")
 
 desc_dict = ttk.Label(tab_scan, text="1. Вставьте 2 колонки из Excel (SN и Label):", justify="center")
 desc_dict.pack(pady=(10, 2))
@@ -288,7 +288,7 @@ dict_input = tk.Text(tab_scan, height=8, width=50, font=("Consolas", 10), wrap=t
 dict_input.pack(pady=5, padx=20, fill=tk.BOTH, expand=True)
 add_context_menu(dict_input)
 
-desc_scan = ttk.Label(tab_scan, text="2. Кликните сюда и сканируйте SN с коробок:", justify="center")
+desc_scan = ttk.Label(tab_scan, text="2. Кликните сюда и сканируйте SN с коробок или оборудования:", justify="center")
 desc_scan.pack(pady=(10, 2))
 
 scan_entry = ttk.Entry(tab_scan, font=("Consolas", 14), width=35)
