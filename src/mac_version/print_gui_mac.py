@@ -204,7 +204,7 @@ def generate_label_image(text_str, output_path):
     Code128 = barcode.get_barcode_class('code128')
     options = {
         "write_text": False,
-        "module_height": 13.0,     # Штрихкод стал пониже
+        "module_height": 13.0,
         "module_width": 0.8,
         "quiet_zone": 1.0,
     }
@@ -223,7 +223,7 @@ def generate_label_image(text_str, output_path):
             "/System/Library/Fonts/Supplemental/Times New Roman Bold.ttf",
             "/System/Library/Fonts/Times.ttc"
         ]
-        font_size = 90  # Размер шрифта для текста сверху
+        font_size = 90
         for fp in font_paths:
             try:
                 import os
@@ -247,25 +247,30 @@ def generate_label_image(text_str, output_path):
         except AttributeError:
             text_w, text_h = dummy_draw.textsize(top_text, font=font)
         
-        # Убрал жесткую привязку к гигантскому размеру 1200
-        canvas_w = max(text_w + 120, bc_img.width + 120)
+        # Делаем длину ленты посимпатичнее. 
+        margin = 100 # Отступы (пустое место) по краям ленты
+        canvas_w = max(text_w, bc_img.width) + (margin * 2) 
         
         canvas = Image.new('RGB', (canvas_w, canvas_h), 'white')
         draw = ImageDraw.Draw(canvas)
         
         text_x = (canvas_w - text_w) // 2
-        text_y = 40 # Отступ сверху
+        text_y = 50 # Отступ от верхнего края ленты 29мм
         draw.text((text_x, text_y), top_text, fill="black", font=font)
         
         bc_target_w = max(text_w, bc_img.width)
-        bc_target_h = canvas_h - text_h - 90
+        bc_target_h = canvas_h - text_h - 100
         if bc_target_h > 0:
             bc_res = bc_img.resize((bc_target_w, bc_target_h), getattr(Image, 'Resampling', Image).NEAREST)
             bc_x = (canvas_w - bc_res.width) // 2
-            bc_y = text_y + text_h + 10  # Сразу под текстом
+            bc_y = text_y + text_h + 10
             canvas.paste(bc_res, (bc_x, bc_y))
 
-        # Выгружаем картинку "горизонтально" как она есть
+        # САМОЕ ГЛАВНОЕ: Разворачиваем холст!
+        # После поворота ширина станет 306px (ширина ленты), а высота - canvas_w (длина ленты)
+        canvas = canvas.rotate(90, expand=True)
+
+        # Выгружаем картинку
         canvas.save(output_path + ".png", "PNG", dpi=(300.0, 300.0))
         
         try:
@@ -299,13 +304,20 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
             try:
                 import subprocess
                 out = subprocess.check_output(["lpoptions", "-p", selected_printer, "-l"], text=True)
+                # Выискиваем формат 29mm, при этом избегаем 29x90 так как нам нужна гибкая длина ленты (по картинке)
                 for line in out.splitlines():
                     if "PageSize" in line or "media" in line.lower():
                         opts = line.split(":")[-1].strip().split()
                         for opt in opts:
-                            if "29" in opt:
+                            if "29" in opt and "90" not in opt:
                                 media_opts = opt.replace("*", "")
                                 break
+                        if not media_opts:
+                            # Фолбэк если есть только 29x90
+                            for opt in opts:
+                                if "29" in opt:
+                                    media_opts = opt.replace("*", "")
+                                    break
             except:
                 pass
                 
@@ -320,13 +332,13 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
                 generate_label_image(clean_num, temp_file)
                 image_path = temp_file + ".png"
                 
-                # Добавлен параметр -o landscape, чтобы драйвер развернул нашу 
-                # обрезанную картинку во всю ширину ленты 90мм
-                cmd = ["lp", "-d", selected_printer, "-o", "fit-to-page", "-o", "landscape"]
+                # Теперь картинка уже повернута программно как надо, поэтому landscape ВЫКЛЮЧЕН
+                # fit-to-page тоже можно опустить или оставить, но оставим fit-to-page чтобы картинка массштабировалась строго в рамки 29мм
+                cmd = ["lp", "-d", selected_printer]
                 if media_opts:
                     cmd.extend(["-o", f"media={media_opts}"])
                 else:
-                    cmd.extend(["-o", "media=29x90mm"])
+                    cmd.extend(["-o", "media=29mm"])
                     
                 cmd.append(image_path)
                 
