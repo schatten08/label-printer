@@ -204,8 +204,8 @@ def generate_label_image(text_str, output_path):
     Code128 = barcode.get_barcode_class('code128')
     options = {
         "write_text": False,
-        "module_height": 13.0,
-        "module_width": 0.8,
+        "module_height": 20.0, # Увеличиваем высоту штрихкода для 62мм
+        "module_width": 1.2,   # Делаем полосы толще
         "quiet_zone": 1.0,
     }
     
@@ -223,7 +223,7 @@ def generate_label_image(text_str, output_path):
             "/System/Library/Fonts/Supplemental/Times New Roman Bold.ttf",
             "/System/Library/Fonts/Times.ttc"
         ]
-        font_size = 90
+        font_size = 140 # Делаем шрифт крупнее
         for fp in font_paths:
             try:
                 import os
@@ -236,7 +236,7 @@ def generate_label_image(text_str, output_path):
         if not font:
             font = ImageFont.load_default()
             
-        canvas_h = 306
+        canvas_h = 696 # ШИРИНА ЛЕНТЫ 62мм (696 точек)
         top_text = f"Epam {text_str}"
         
         dummy_draw = ImageDraw.Draw(Image.new('RGB', (1,1)))
@@ -247,25 +247,25 @@ def generate_label_image(text_str, output_path):
         except AttributeError:
             text_w, text_h = dummy_draw.textsize(top_text, font=font)
         
-        margin = 100
+        margin = 150
         canvas_w = max(text_w, bc_img.width) + (margin * 2) 
         
         canvas = Image.new('RGB', (canvas_w, canvas_h), 'white')
         draw = ImageDraw.Draw(canvas)
         
         text_x = (canvas_w - text_w) // 2
-        text_y = 50 
+        text_y = 120 # Отступ сверху
         draw.text((text_x, text_y), top_text, fill="black", font=font)
         
         bc_target_w = max(text_w, bc_img.width)
-        bc_target_h = canvas_h - text_h - 100
+        bc_target_h = canvas_h - text_h - 220
         if bc_target_h > 0:
             bc_res = bc_img.resize((bc_target_w, bc_target_h), getattr(Image, 'Resampling', Image).NEAREST)
             bc_x = (canvas_w - bc_res.width) // 2
-            bc_y = text_y + text_h + 10
+            bc_y = text_y + text_h + 30
             canvas.paste(bc_res, (bc_x, bc_y))
 
-        # Оставляем картинку 1000х306 ! Не поворачиваем для brother_ql
+        # Сохраняем "горизонтально", brother_ql внутри convert сработает с rotate='90'
         canvas.save(output_path + ".png", "PNG", dpi=(300.0, 300.0))
         
         try:
@@ -312,7 +312,6 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
                 image_path = temp_file + ".png"
                 bin_path = temp_file + ".bin"
                 
-                # ИСПОЛЬЗУЕМ BROTHER_QL для обхода драйвера CUPS
                 try:
                     import warnings
                     warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -320,11 +319,12 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
                     from brother_ql.raster import BrotherQLRaster
                     
                     qlr = BrotherQLRaster('QL-810W')
+                    # qlr.exception_on_warning = True
                     
                     instructions = convert(
                         qlr=qlr, 
                         images=[image_path], 
-                        label='29',
+                        label='62', # Укажем ленту 62mm!
                         rotate='90',       
                         threshold=70.0,
                         dither=False,
@@ -335,11 +335,10 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
                     with open(bin_path, 'wb') as f:
                         f.write(instructions)
                         
-                    # Отправляем RAW-байткод через CUPS с опцией -o raw ! Это заставит Mac не трогать код
+                    # Отправляем RAW-байткод
                     cmd = ["lp", "-d", selected_printer, "-o", "raw", bin_path]
                 except Exception as e:
                     print("Brother_ql error:", e)
-                    # Если brother_ql сломался, фолбэк на печать картинки
                     cmd = ["lp", "-d", selected_printer, "-o", "fit-to-page", image_path]
                 
                 result = subprocess.run(cmd, capture_output=True, text=True)
