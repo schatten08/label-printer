@@ -247,15 +247,14 @@ def generate_label_image(text_str, output_path):
         except AttributeError:
             text_w, text_h = dummy_draw.textsize(top_text, font=font)
         
-        # Делаем длину ленты посимпатичнее. 
-        margin = 100 # Отступы (пустое место) по краям ленты
+        margin = 100
         canvas_w = max(text_w, bc_img.width) + (margin * 2) 
         
         canvas = Image.new('RGB', (canvas_w, canvas_h), 'white')
         draw = ImageDraw.Draw(canvas)
         
         text_x = (canvas_w - text_w) // 2
-        text_y = 50 # Отступ от верхнего края ленты 29мм
+        text_y = 50 
         draw.text((text_x, text_y), top_text, fill="black", font=font)
         
         bc_target_w = max(text_w, bc_img.width)
@@ -266,11 +265,7 @@ def generate_label_image(text_str, output_path):
             bc_y = text_y + text_h + 10
             canvas.paste(bc_res, (bc_x, bc_y))
 
-        # САМОЕ ГЛАВНОЕ: Разворачиваем холст!
-        # После поворота ширина станет 306px (ширина ленты), а высота - canvas_w (длина ленты)
-        canvas = canvas.rotate(90, expand=True)
-
-        # Выгружаем картинку
+        # Оставляем картинку 1000х306 ! Не поворачиваем для brother_ql
         canvas.save(output_path + ".png", "PNG", dpi=(300.0, 300.0))
         
         try:
@@ -285,9 +280,12 @@ def generate_label_image(text_str, output_path):
 def send_to_printer(text_data, status_widget, btn_widget=None):
     try:
         import barcode
+        import PIL
         from PIL import Image
+        if not hasattr(PIL.Image, 'ANTIALIAS'):
+            PIL.Image.ANTIALIAS = getattr(PIL.Image, 'Resampling', PIL.Image).LANCZOS
     except ImportError:
-        messagebox.showerror("Ошибка", "Для работы установите библиотеки: pip3 install python-barcode Pillow")
+        messagebox.showerror("Ошибка", "Для работы установите библиотеки: pip3 install python-barcode Pillow brother_ql")
         return
 
     status_widget.config(text="⏳ Идет отправка...", foreground="blue")
@@ -299,27 +297,6 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
             import re
             numbers = re.split(r'[,;\s]+', text_data)
             selected_printer = printer_var.get()
-            
-            media_opts = ""
-            try:
-                import subprocess
-                out = subprocess.check_output(["lpoptions", "-p", selected_printer, "-l"], text=True)
-                # Выискиваем формат 29mm, при этом избегаем 29x90 так как нам нужна гибкая длина ленты (по картинке)
-                for line in out.splitlines():
-                    if "PageSize" in line or "media" in line.lower():
-                        opts = line.split(":")[-1].strip().split()
-                        for opt in opts:
-                            if "29" in opt and "90" not in opt:
-                                media_opts = opt.replace("*", "")
-                                break
-                        if not media_opts:
-                            # Фолбэк если есть только 29x90
-                            for opt in opts:
-                                if "29" in opt:
-                                    media_opts = opt.replace("*", "")
-                                    break
-            except:
-                pass
                 
             for num in numbers:
                 clean_num = num.strip()
@@ -328,19 +305,42 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
                 
                 import os
                 import tempfile
+                import subprocess
+                
                 temp_file = os.path.join(tempfile.gettempdir(), f"label_{clean_num}")
                 generate_label_image(clean_num, temp_file)
                 image_path = temp_file + ".png"
+                bin_path = temp_file + ".bin"
                 
-                # Теперь картинка уже повернута программно как надо, поэтому landscape ВЫКЛЮЧЕН
-                # fit-to-page тоже можно опустить или оставить, но оставим fit-to-page чтобы картинка массштабировалась строго в рамки 29мм
-                cmd = ["lp", "-d", selected_printer]
-                if media_opts:
-                    cmd.extend(["-o", f"media={media_opts}"])
-                else:
-                    cmd.extend(["-o", "media=29mm"])
+                # ИСПОЛЬЗУЕМ BROTHER_QL для обхода драйвера CUPS
+                try:
+                    import warnings
+                    warnings.filterwarnings("ignore", category=DeprecationWarning)
+                    from brother_ql.conversion import convert
+                    from brother_ql.raster import BrotherQLRaster
                     
-                cmd.append(image_path)
+                    qlr = BrotherQLRaster('QL-810W')
+                    
+                    instructions = convert(
+                        qlr=qlr, 
+                        images=[image_path], 
+                        label='29',
+                        rotate='90',       
+                        threshold=70.0,
+                        dither=False,
+                        compress=True,
+                        red=False
+                    )
+                    
+                    with open(bin_path, 'wb') as f:
+                        f.write(instructions)
+                        
+                    # Отправляем RAW-байткод через CUPS с опцией -o raw ! Это заставит Mac не трогать код
+                    cmd = ["lp", "-d", selected_printer, "-o", "raw", bin_path]
+                except Exception as e:
+                    print("Brother_ql error:", e)
+                    # Если brother_ql сломался, фолбэк на печать картинки
+                    cmd = ["lp", "-d", selected_printer, "-o", "fit-to-page", image_path]
                 
                 result = subprocess.run(cmd, capture_output=True, text=True)
                 
@@ -350,6 +350,7 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
                 
                 try:
                     os.remove(image_path)
+                    os.remove(bin_path)
                 except:
                     pass
                     
