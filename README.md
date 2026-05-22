@@ -18,6 +18,12 @@ The application automatically scans for installed printers and populates a dropd
 - Installed **Brother bPAC3 SDK**.
   - **How to install SDK**: Download the [Brother bPAC Client SDK](https://support.brother.com/g/s/es/dev/en/bpac/index.html) from the official Brother Developer Center (ensure you select your Windows version: 32-bit or 64-bit). Run the installer. Since our script uses standard Windows COM objects (`bpac.Document`), you only need a standard installation. The script will automatically connect to the SDK without needing hardcoded paths to `.dll` files.
 
+
+### Hardware Scanner Setup (Zebra DS22 / Bluetooth)
+If you are using a wireless barcode scanner like the **Zebra DS2278** and want to connect it directly via Bluetooth (bypassing the dock station):
+- **Windows:** Download and install the [Cordless Scan-to-Connect (123Scan)](https://www.zebra.com/us/en/support-downloads/software/scanner-software/cordless-scantoconnect.html) utility from the official Zebra website. Run the utility and scan the pairing barcode from the screen.
+- **macOS:** You usually do not need extra software. Scan the "HID Bluetooth Classic" (or "HID Keyboard Emulation") configuration barcode from the Zebra Quick Start Guide to put the scanner in pairing mode, then go to macOS *System Settings > Bluetooth* and connect the scanner as a standard keyboard.
+
 ### macOS Setup
 For macOS, the application dynamically generates barcode images and bypasses the unsupported `.lbx` templates.
 1. Open the terminal and install the required Python libraries:
