@@ -232,7 +232,8 @@ LANGS = {
         "btn_ex": "💾 Export to CSV",
         "c_stat": "Status",
         "c_lbl": "Label (Inventory ID)",
-        "c_mod": "Model"
+        "c_mod": "Model",
+        "found_stat": "Found:"
     }
 }
 def get_lang():
@@ -274,6 +275,7 @@ def update_texts(lang):
     inv_tree.heading("status", text=l["c_stat"])
     inv_tree.heading("sn", text=l["c_lbl"])
     inv_tree.heading("rest", text=l["c_mod"])
+    update_inv_stats()
 
 def apply_theme(theme_name):
     save_theme_pref(theme_name)
@@ -307,6 +309,12 @@ def apply_theme(theme_name):
     style.map('TCombobox', fieldbackground=[('readonly', input_bg)], selectbackground=[('readonly', accent_color)], foreground=[('readonly', input_fg)])
     style.configure('TEntry', fieldbackground=input_bg, foreground=input_fg, insertcolor=input_fg, padding=6)
 
+    style.configure('Treeview', background=text_bg, foreground=input_fg, fieldbackground=text_bg, borderwidth=0)
+    style.configure('Treeview.Heading', background=tab_inactive, foreground=fg_color, font=("Segoe UI" if "win" in sys.platform else "Helvetica", 10, "bold"))
+    style.map('Treeview.Heading', background=[('active', bg_color)])
+    style.map('Treeview', background=[('selected', accent_color)], foreground=[('selected', 'white')])
+
+
     # Настраиваем желтый/оранжевый цвет для предупреждения, зависящий от темы
     warning_color = "#e6a200" if theme_name == "dark" else "#d97706"
     style.configure('Warning.TLabel', background=bg_color, foreground=warning_color, font=("Segoe UI", 9, "italic", "bold"))
@@ -318,6 +326,7 @@ def apply_theme(theme_name):
     try:
         text_input.config(bg=text_bg, fg=input_fg, insertbackground=input_fg)
         dict_input.config(bg=text_bg, fg=input_fg, insertbackground=input_fg)
+        inv_dict_input.config(bg=text_bg, fg=input_fg, insertbackground=input_fg)
     except NameError:
         pass
 

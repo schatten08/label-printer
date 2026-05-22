@@ -34,7 +34,8 @@ LANGS = {
         "btn_ex": "?? ??????? ??????",
         "c_stat": "??????",
         "c_lbl": "Label (??????????? ?)",
-        "c_mod": "??????"
+        "c_mod": "??????",
+        "found_stat": "???????:"
     },
     "en": {
         "title": "Label Printing",
@@ -53,7 +54,8 @@ LANGS = {
         "btn_ex": "?? Export Report",
         "c_stat": "Status",
         "c_lbl": "Label (Inventory ID)",
-        "c_mod": "Model"
+        "c_mod": "Model",
+        "found_stat": "Found:"
     }
 }
 def get_lang():
@@ -95,6 +97,7 @@ def update_texts(lang):
     inv_tree.heading("status", text=l["c_stat"])
     inv_tree.heading("sn", text=l["c_lbl"])
     inv_tree.heading("rest", text=l["c_mod"])
+    update_inv_stats()
 
 
 def get_mac_printers():
