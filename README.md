@@ -25,10 +25,10 @@ If you are using a wireless barcode scanner like the **Zebra DS2278** and want t
 - **macOS:** You usually do not need extra software. Scan the "HID Bluetooth Classic" (or "HID Keyboard Emulation") configuration barcode from the Zebra Quick Start Guide to put the scanner in pairing mode, then go to macOS *System Settings > Bluetooth* and connect the scanner as a standard keyboard.
 
 ### macOS Setup
-For macOS, the application dynamically generates barcode images and bypasses the unsupported `.lbx` templates.
+For macOS, the application dynamically generates barcode images and bypasses the unsupported `.lbx` templates. Instead of relying on native CUPS drivers (which often distort continuous roll dimensions), the Mac version uses the `brother_ql` library to compile raw binary instructions, which are then passed natively to the printer.
 1. Open the terminal and install the required Python libraries:
-   `pip3 install -r mac_version/requirements.txt`
-2. Ensure your Brother printer is added in macOS "Printers & Scanners" settings. The script will automatically detect any printer containing "Brother" or "QL" in its name via the CUPS system.
+   `pip3 install -r mac_version/requirements.txt` *(Note: requires `brother_ql`, `Pillow`, and `python-barcode`)*
+2. Ensure your Brother printer is added in macOS "Printers & Scanners" settings. The script will automatically detect any printer containing "Brother" or "QL" in its name and map the job to print directly over `lp -o raw`.
 
 ## Usage
 *The application provides two tabs/modes of operation:*
