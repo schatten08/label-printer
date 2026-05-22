@@ -216,7 +216,6 @@ def generate_label_image(text_str, output_path):
     
     try:
         from PIL import Image, ImageDraw, ImageFont
-
         bc_img = Image.open(temp_bc_full)
         
         font = None
@@ -225,20 +224,19 @@ def generate_label_image(text_str, output_path):
             "/System/Library/Fonts/Times.ttc"
         ]
         font_size = 90  # Размер шрифта для текста сверху
-        for path in font_paths:
+        for fp in font_paths:
             try:
-                font = ImageFont.truetype(path, font_size)
-                break
+                import os
+                if os.path.exists(fp):
+                    font = ImageFont.truetype(fp, font_size)
+                    break
             except:
-                continue
-                
+                pass
+        
         if not font:
             font = ImageFont.load_default()
             
-        # Задаем размер полотна (29мм в высоту ~ 342px при 300dpi, ширина динамическая, но не менее 1200)
         canvas_h = 306
-        
-        # Строка текста сверху: "Epam " + сам номер
         top_text = f"Epam {text_str}"
         
         dummy_draw = ImageDraw.Draw(Image.new('RGB', (1,1)))
@@ -249,31 +247,26 @@ def generate_label_image(text_str, output_path):
         except AttributeError:
             text_w, text_h = dummy_draw.textsize(top_text, font=font)
         
-        # Ширина холста подстраивается под текст или штрихкод
-        canvas_w = max(text_w + 100, bc_img.width + 100, 1200)
+        # Убрал жесткую привязку к гигантскому размеру 1200
+        canvas_w = max(text_w + 120, bc_img.width + 120)
         
         canvas = Image.new('RGB', (canvas_w, canvas_h), 'white')
         draw = ImageDraw.Draw(canvas)
         
-        # 1. Текст сверху (Epam 1121502)
-        # Немного сдвигаем текст влево от центра (чтобы выглядело как в оригинале)
         text_x = (canvas_w - text_w) // 2
-        text_y = 50 # Отступ сверху
+        text_y = 40 # Отступ сверху
         draw.text((text_x, text_y), top_text, fill="black", font=font)
         
-        # 2. Штрихкод снизу
-        # Растягиваем его по ширине текста
         bc_target_w = max(text_w, bc_img.width)
-        bc_target_h = canvas_h - text_h - 100 # Оставшееся место
+        bc_target_h = canvas_h - text_h - 90
         if bc_target_h > 0:
             bc_res = bc_img.resize((bc_target_w, bc_target_h), getattr(Image, 'Resampling', Image).NEAREST)
             bc_x = (canvas_w - bc_res.width) // 2
             bc_y = text_y + text_h + 10  # Сразу под текстом
             canvas.paste(bc_res, (bc_x, bc_y))
 
-        canvas = canvas.rotate(90, expand=True)
+        # Выгружаем картинку "горизонтально" как она есть
         canvas.save(output_path + ".png", "PNG", dpi=(300.0, 300.0))
-        canvas.save(output_path + ".pdf", "PDF", resolution=300.0)
         
         try:
             import os
@@ -298,17 +291,16 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
 
     def run_script():
         try:
+            import re
             numbers = re.split(r'[,;\s]+', text_data)
             selected_printer = printer_var.get()
             
-            # Читаем доступные размеры ленты из драйвера принтера!
             media_opts = ""
             try:
+                import subprocess
                 out = subprocess.check_output(["lpoptions", "-p", selected_printer, "-l"], text=True)
-                # Ищем что-то похожее на 29mm
                 for line in out.splitlines():
                     if "PageSize" in line or "media" in line.lower():
-                        # Ищем опцию для 29mm (напр. 29mm, 29x90, 29x90mm, 29x15_24)
                         opts = line.split(":")[-1].strip().split()
                         for opt in opts:
                             if "29" in opt:
@@ -322,17 +314,18 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
                 if not clean_num:
                     continue
                 
+                import os
+                import tempfile
                 temp_file = os.path.join(tempfile.gettempdir(), f"label_{clean_num}")
                 generate_label_image(clean_num, temp_file)
                 image_path = temp_file + ".png"
                 
-                # Печатаем через lp с точным указанием размера ленты
-                # Если media_opts найден, принтер перестанет моргать красным, т.к. размер совпадет с установленным
-                cmd = ["lp", "-d", selected_printer, "-o", "fit-to-page"]
+                # Добавлен параметр -o landscape, чтобы драйвер развернул нашу 
+                # обрезанную картинку во всю ширину ленты 90мм
+                cmd = ["lp", "-d", selected_printer, "-o", "fit-to-page", "-o", "landscape"]
                 if media_opts:
                     cmd.extend(["-o", f"media={media_opts}"])
                 else:
-                    # Резервный вариант, если в lpoptions ничего не нашли
                     cmd.extend(["-o", "media=29x90mm"])
                     
                 cmd.append(image_path)
