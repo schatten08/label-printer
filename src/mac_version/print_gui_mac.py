@@ -306,7 +306,7 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
                 image_path = temp_file + ".png"
                 
                 selected_printer = printer_var.get()
-                cmd = ["lpr", "-P", selected_printer, "-o", "fit-to-page", image_path]
+                cmd = ["lpr", "-P", selected_printer, "-o", "natural-scaling=100", image_path]
                 result = subprocess.run(cmd, capture_output=True, text=True)
                 
                 if result.returncode != 0:
