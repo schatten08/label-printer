@@ -204,9 +204,9 @@ def generate_label_image(text_str, output_path):
     Code128 = barcode.get_barcode_class('code128')
     options = {
         "write_text": False,
-        "module_height": 8.0,   
-        "module_width": 0.3,    
-        "quiet_zone": 0.0,      
+        "module_height": 9.0,   
+        "module_width": 0.5,    # Делаем сам штрихкод плотнее и компактнее
+        "quiet_zone": 0.0,      # Отключаем встроенные отступы самого штрихкода!
     }
     
     temp_bc = output_path + "_bc"
@@ -224,7 +224,7 @@ def generate_label_image(text_str, output_path):
             "/System/Library/Fonts/Times.ttc",
             "/Library/Fonts/Times New Roman.ttf"
         ]
-        font_size = 45 
+        font_size = 65 # Делаем шрифт максимально похожим на эталонный
         for fp in font_paths:
             try:
                 import os
@@ -238,7 +238,7 @@ def generate_label_image(text_str, output_path):
             font = ImageFont.load_default()
             
         canvas_w = 696 
-        top_text = f"EPAm {text_str}"
+        top_text = f"EPAM {text_str}"
         
         dummy_draw = ImageDraw.Draw(Image.new('RGB', (1,1)))
         try:
@@ -249,24 +249,22 @@ def generate_label_image(text_str, output_path):
             text_w, text_h = dummy_draw.textsize(top_text, font=font)
             text_h = max(text_h, font_size)
         
-        # Добавляем отступы (padding), чтобы этикетка визуально была 1-в-1 как в Windows
-        margin_y = 50
-        spacing = 15
+        # Абсолютно в ноль убираем пустые поля
+        margin_y = 0
+        spacing = 5
         
-        # Общая высота. Минимальная ширина реза принтера около 1 дюйма (300px).
-        content_h = text_h + bc_img.height + spacing
-        canvas_h = max(290, content_h + (margin_y * 2))
-        
-        margin_y = (canvas_h - content_h) // 2
+        canvas_h = text_h + bc_img.height + spacing + (margin_y * 2)
         
         canvas = Image.new('RGB', (canvas_w, canvas_h), 'white')
         draw = ImageDraw.Draw(canvas)
         
         text_x = (canvas_w - text_w) // 2
-        draw.text((text_x, margin_y), top_text, fill="black", font=font)
+        text_y = margin_y
+        draw.text((text_x, text_y), top_text, fill="black", font=font)
         
         bc_x = (canvas_w - bc_img.width) // 2
-        canvas.paste(bc_img, (bc_x, margin_y + text_h + spacing))
+        bc_y = text_y + text_h + spacing
+        canvas.paste(bc_img, (bc_x, bc_y))
 
         canvas.save(output_path + ".png", "PNG", dpi=(300.0, 300.0))
         
