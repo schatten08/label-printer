@@ -204,9 +204,9 @@ def generate_label_image(text_str, output_path):
     Code128 = barcode.get_barcode_class('code128')
     options = {
         "write_text": False,
-        "module_height": 10.0,   # Чуть меньше, чтобы не был огроменным
-        "module_width": 0.6,     # Естественная ширина без пиксельного растягивания
-        "quiet_zone": 1.0,
+        "module_height": 9.0,   
+        "module_width": 0.5,    # Делаем сам штрихкод плотнее и компактнее
+        "quiet_zone": 0.0,      # Отключаем встроенные отступы самого штрихкода!
     }
     
     temp_bc = output_path + "_bc"
@@ -224,7 +224,7 @@ def generate_label_image(text_str, output_path):
             "/System/Library/Fonts/Times.ttc",
             "/Library/Fonts/Times New Roman.ttf"
         ]
-        font_size = 75 # Компромиссный, классический размер
+        font_size = 65 # Делаем шрифт максимально похожим на эталонный
         for fp in font_paths:
             try:
                 import os
@@ -243,16 +243,14 @@ def generate_label_image(text_str, output_path):
         dummy_draw = ImageDraw.Draw(Image.new('RGB', (1,1)))
         try:
             bbox = font.getbbox(top_text)
-            text_w = bbox[2] - bbox[0] # ширина
-            # Pillow иногда возвращает странный Y-отступ, срезая шапки "E, P". 
-            # Возьмем безопасную высоту:
+            text_w = bbox[2] - bbox[0]
             text_h = font_size
         except AttributeError:
             text_w, text_h = dummy_draw.textsize(top_text, font=font)
             text_h = max(text_h, font_size)
         
-        # Делаем отступы сверху и снизу минимальными для экономии ленты!
-        margin_y = 10
+        # Абсолютно в ноль убираем пустые поля
+        margin_y = 0
         spacing = 5
         
         canvas_h = text_h + bc_img.height + spacing + (margin_y * 2)
