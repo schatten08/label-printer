@@ -251,9 +251,9 @@ def generate_label_image(text_str, output_path):
             text_w, text_h = dummy_draw.textsize(top_text, font=font)
             text_h = max(text_h, font_size)
         
-        # Делаем отступы сверху безопаснее (чтобы принтер точно не срезал)
-        margin_y = 40
-        spacing = 15
+        # Делаем отступы сверху и снизу минимальными для экономии ленты!
+        margin_y = 10
+        spacing = 5
         
         canvas_h = text_h + bc_img.height + spacing + (margin_y * 2)
         
