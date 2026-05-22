@@ -204,8 +204,8 @@ def generate_label_image(text_str, output_path):
     Code128 = barcode.get_barcode_class('code128')
     options = {
         "write_text": False,
-        "module_height": 18.0,   # Значительно увеличил высоту штрихкода как на эталоне
-        "module_width": 1.0,     # Сделал его шире
+        "module_height": 10.0,   # Чуть меньше, чтобы не был огроменным
+        "module_width": 0.6,     # Естественная ширина без пиксельного растягивания
         "quiet_zone": 1.0,
     }
     
@@ -224,7 +224,7 @@ def generate_label_image(text_str, output_path):
             "/System/Library/Fonts/Times.ttc",
             "/Library/Fonts/Times New Roman.ttf"
         ]
-        font_size = 100 # Крупный, читаемый шрифт как на оригинале
+        font_size = 75 # Компромиссный, классический размер
         for fp in font_paths:
             try:
                 import os
@@ -238,30 +238,24 @@ def generate_label_image(text_str, output_path):
             font = ImageFont.load_default()
             
         canvas_w = 696 
-        
-        # Оставляем строго EPAM (заглавными)
         top_text = f"EPAM {text_str}"
         
         dummy_draw = ImageDraw.Draw(Image.new('RGB', (1,1)))
         try:
             bbox = font.getbbox(top_text)
-            text_w = bbox[2] - bbox[0]
-            text_h = bbox[3] - bbox[1]
+            text_w = bbox[2] - bbox[0] # ширина
+            # Pillow иногда возвращает странный Y-отступ, срезая шапки "E, P". 
+            # Возьмем безопасную высоту:
+            text_h = font_size
         except AttributeError:
             text_w, text_h = dummy_draw.textsize(top_text, font=font)
+            text_h = max(text_h, font_size)
         
-        # Минимизируем пустое пространство (отступы) сверху и снизу
-        margin_y = 15
-        spacing = 5
+        # Делаем отступы сверху безопаснее (чтобы принтер точно не срезал)
+        margin_y = 40
+        spacing = 15
         
-        # Если штрихкод все равно мал по ширине по-сравнению с текстом, можно его немного растянуть
-        bc_target_w = max(int(text_w * 1.1), bc_img.width) # Штрихкод чуть шире текста
-        bc_target_w = min(bc_target_w, canvas_w - 40) # Но не шире самой ленты
-        
-        bc_target_h = int(bc_img.height * (bc_target_w / bc_img.width)) if bc_img.width else bc_img.height
-        bc_res = bc_img.resize((bc_target_w, bc_target_h), getattr(Image, 'Resampling', Image).NEAREST)
-
-        canvas_h = text_h + bc_res.height + spacing + (margin_y * 2)
+        canvas_h = text_h + bc_img.height + spacing + (margin_y * 2)
         
         canvas = Image.new('RGB', (canvas_w, canvas_h), 'white')
         draw = ImageDraw.Draw(canvas)
@@ -270,9 +264,9 @@ def generate_label_image(text_str, output_path):
         text_y = margin_y
         draw.text((text_x, text_y), top_text, fill="black", font=font)
         
-        bc_x = (canvas_w - bc_res.width) // 2
+        bc_x = (canvas_w - bc_img.width) // 2
         bc_y = text_y + text_h + spacing
-        canvas.paste(bc_res, (bc_x, bc_y))
+        canvas.paste(bc_img, (bc_x, bc_y))
 
         canvas.save(output_path + ".png", "PNG", dpi=(300.0, 300.0))
         
