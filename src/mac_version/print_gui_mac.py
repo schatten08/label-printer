@@ -204,8 +204,8 @@ def generate_label_image(text_str, output_path):
     Code128 = barcode.get_barcode_class('code128')
     options = {
         "write_text": False,
-        "module_height": 20.0, # Увеличиваем высоту штрихкода для 62мм
-        "module_width": 1.2,   # Делаем полосы толще
+        "module_height": 10.0, # Родной, приятный размер штрихкода (без гигантизма)
+        "module_width": 0.7,   
         "quiet_zone": 1.0,
     }
     
@@ -223,7 +223,7 @@ def generate_label_image(text_str, output_path):
             "/System/Library/Fonts/Supplemental/Times New Roman Bold.ttf",
             "/System/Library/Fonts/Times.ttc"
         ]
-        font_size = 140 # Делаем шрифт крупнее
+        font_size = 85 # Возвращаем адекватный размер текста (~7 миллиметров высотой)
         for fp in font_paths:
             try:
                 import os
@@ -236,7 +236,7 @@ def generate_label_image(text_str, output_path):
         if not font:
             font = ImageFont.load_default()
             
-        canvas_h = 696 # ШИРИНА ЛЕНТЫ 62мм (696 точек)
+        canvas_h = 696 # Ширина 62мм ленты ПРИНТЕРА остается 696, чтобы brother_ql не масштабировал!
         top_text = f"Epam {text_str}"
         
         dummy_draw = ImageDraw.Draw(Image.new('RGB', (1,1)))
@@ -247,25 +247,25 @@ def generate_label_image(text_str, output_path):
         except AttributeError:
             text_w, text_h = dummy_draw.textsize(top_text, font=font)
         
-        margin = 150
+        margin = 100
         canvas_w = max(text_w, bc_img.width) + (margin * 2) 
         
         canvas = Image.new('RGB', (canvas_w, canvas_h), 'white')
         draw = ImageDraw.Draw(canvas)
         
+        # Центрируем весь блок посередине 62мм ленты по вертикали
+        content_h = text_h + 15 + bc_img.height
+        start_y = (canvas_h - content_h) // 2
+        
         text_x = (canvas_w - text_w) // 2
-        text_y = 120 # Отступ сверху
+        text_y = start_y
         draw.text((text_x, text_y), top_text, fill="black", font=font)
         
-        bc_target_w = max(text_w, bc_img.width)
-        bc_target_h = canvas_h - text_h - 220
-        if bc_target_h > 0:
-            bc_res = bc_img.resize((bc_target_w, bc_target_h), getattr(Image, 'Resampling', Image).NEAREST)
-            bc_x = (canvas_w - bc_res.width) // 2
-            bc_y = text_y + text_h + 30
-            canvas.paste(bc_res, (bc_x, bc_y))
+        bc_x = (canvas_w - bc_img.width) // 2
+        bc_y = text_y + text_h + 15
+        canvas.paste(bc_img, (bc_x, bc_y))
 
-        # Сохраняем "горизонтально", brother_ql внутри convert сработает с rotate='90'
+        # Выгружаем, драйвер brother_ql сам перевернет это на 90 градусов (rotate='90')
         canvas.save(output_path + ".png", "PNG", dpi=(300.0, 300.0))
         
         try:
