@@ -51,6 +51,20 @@ For macOS, the application dynamically generates barcode images and bypasses the
 1. Navigate to the `mac_version` directory.
 2. Run the script: `python3 print_gui_mac.py`
 
+**Creating a macOS App Shortcut (Automator):**
+To run the application natively without keeping a Terminal window open, you can create a Mac `.app`:
+1. Open **Automator** and create a New Document -> **Application**.
+2. Drag and drop the **"Run Shell Script"** action from the left sidebar into the right pane.
+3. Paste the following script (adjusting the paths to your specific Python environment, e.g., `pyenv` or `homebrew`, and your project path):
+   ```bash
+   # Example for pyenv users:
+   export PATH="$HOME/.pyenv/bin:$HOME/.pyenv/shims:$PATH"
+   
+   cd "$HOME/Downloads/label-printer/src/mac_version"
+   python3 print_gui_mac.py
+   ```
+4. Click **File -> Save**, name it `Label Printer`, and save it to your Applications folder or Desktop. You can now launch the printer GUI like any other Mac app.
+
 ## Project Structure
 - `windows_version/print_gui.py` — The main graphical user interface for Windows (Python/Tkinter).
 - `print.ps1` — The PowerShell script that communicates with the printer via the COM/bPAC SDK.
