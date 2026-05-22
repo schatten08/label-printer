@@ -440,9 +440,19 @@ def load_inventory():
         parts = [p.strip() for p in parts if p.strip()]
         if not parts: continue
         
-        sn = parts[0]
-        # Все что после лейбла - объединяем
-        rest = " | ".join(parts[1:]) if len(parts) > 1 else ""
+        if len(parts) == 1:
+            sn = parts[0]
+            rest = ""
+        else:
+            # Если первый элемент содержит пробелы (длинное название), 
+            # а последний без пробелов или состоит только из цифр, то считаем последний штрихкодом.
+            if (' ' in parts[0] and ' ' not in parts[-1]) or parts[-1].isdigit():
+                sn = parts[-1]
+                rest = " | ".join(parts[:-1])
+            else:
+                sn = parts[0]
+                rest = " | ".join(parts[1:])
+        
         
         status = "❌ Ожидает"
         item_id = inv_tree.insert("", tk.END, values=(status, sn, rest))
