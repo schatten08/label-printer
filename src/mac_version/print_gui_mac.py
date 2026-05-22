@@ -209,7 +209,7 @@ def generate_label_image(text_str, output_path):
     
     try:
         from PIL import Image, ImageDraw, ImageFont
-        import os
+
         bc_img = Image.open(temp_bc_full)
         
         font = None
@@ -308,7 +308,6 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
                 selected_printer = printer_var.get()
                 
                 try:
-                    import os
                     from brother_ql.conversion import convert
                     from brother_ql.raster import BrotherQLRaster
                     
