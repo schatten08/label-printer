@@ -262,7 +262,7 @@ def generate_label_image(text_str, output_path):
             bc_y = text_y + text_h + margin_y
             canvas.paste(bc_res, (bc_x, bc_y))
 
-        canvas.save(output_path)
+        canvas.save(output_path + ".png")
         
         try:
             os.remove(temp_bc_full)
