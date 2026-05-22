@@ -333,7 +333,8 @@ default_p = next((p for p in printers_list if "QL" in p.upper() or "BROTHER" in 
 
 printer_frame = ttk.Frame(window)
 printer_frame.pack(fill=tk.X, padx=20, pady=5)
-ttk.Label(printer_frame, text="Принтер:", font=("Segoe UI", 10)).pack(side=tk.LEFT)
+printer_lbl = ttk.Label(printer_frame, text="Принтер:", font=("Segoe UI", 10))
+printer_lbl.pack(side=tk.LEFT)
 printer_var = tk.StringVar(value=default_p)
 printer_cb = ttk.Combobox(printer_frame, textvariable=printer_var, values=printers_list, state="readonly")
 printer_cb.pack(side=tk.RIGHT, expand=True, fill=tk.X, padx=(10, 0))
@@ -393,7 +394,8 @@ notebook.add(tab_inv, text=" 📋 Инвентаризация ")
 inv_top_frame = ttk.Frame(tab_inv)
 inv_top_frame.pack(fill=tk.X, padx=10, pady=5)
 
-ttk.Label(inv_top_frame, text="1. Вставьте базу (Label / Модель):").pack(side=tk.LEFT)
+inv_top_lbl = ttk.Label(inv_top_frame, text="1. Вставьте базу (Label / Модель):")
+inv_top_lbl.pack(side=tk.LEFT)
 
 inv_dict_input = tk.Text(tab_inv, height=4, font=("Consolas", 10), wrap=tk.WORD, relief=tk.FLAT, padx=10, pady=5)
 inv_dict_input.pack(fill=tk.X, padx=10, pady=5)
@@ -434,7 +436,8 @@ def load_inventory():
     update_inv_stats()
     inv_scan_entry.focus()
 
-ttk.Button(tab_inv, text="⚙️ Загрузить базу", command=load_inventory).pack(pady=2)
+btn_load = ttk.Button(tab_inv, text="⚙️ Загрузить базу", command=load_inventory)
+btn_load.pack(pady=2)
 
 # Таблица инвентаризации
 columns = ("status", "sn", "rest")
@@ -453,7 +456,8 @@ inv_tree.tag_configure('found', background='#abf7b1', foreground='black')
 inv_scan_frame = ttk.Frame(tab_inv)
 inv_scan_frame.pack(fill=tk.X, padx=10, pady=5)
 
-ttk.Label(inv_scan_frame, text="2. Сканируйте:").pack(side=tk.LEFT)
+inv_scan_lbl = ttk.Label(inv_scan_frame, text="2. Сканируйте:")
+inv_scan_lbl.pack(side=tk.LEFT)
 inv_scan_entry = ttk.Entry(inv_scan_frame, font=("Consolas", 14), width=25)
 inv_scan_entry.pack(side=tk.LEFT, padx=10)
 
@@ -524,7 +528,8 @@ def export_inventory():
     except Exception as e:
         messagebox.showerror("Ошибка", f"Не удалось сохранить файл:\n{e}")
 
-ttk.Button(tab_inv, text="💾 Экспорт отчета в CSV", command=export_inventory).pack(pady=10)
+btn_export = ttk.Button(tab_inv, text="💾 Экспорт отчета в CSV", command=export_inventory)
+btn_export.pack(pady=10)
 
 apply_theme(current_theme) # Применяем вторично, чтобы обновить цвета у tk.Text после их создания
 current_lang = get_lang()
