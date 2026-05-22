@@ -209,11 +209,16 @@ tab_scan = ttk.Frame(notebook)
 notebook.add(tab_scan, text=" 🔍 Сканер коробок / оборудования ")
 desc_dict = ttk.Label(tab_scan, text="1. Вставьте 2 колонки из Excel (SN и Label):", justify="center")
 desc_dict.pack(pady=(10, 2))
+
+def auto_focus_scanner(event=None):
+    window.after(100, lambda: scan_entry.focus())
+
 dict_input = tk.Text(tab_scan, height=8, width=50, font=("Menlo", 12), wrap=tk.WORD)
 dict_input.pack(pady=5, padx=20)
 add_context_menu(dict_input)
+dict_input.bind("<<Paste>>", auto_focus_scanner)
 
-desc_scan = ttk.Label(tab_scan, text="2. Кликните сюда и сканируйте SN с коробок или оборудования:", justify="center")
+desc_scan = ttk.Label(tab_scan, text="2. Фокус сюда (перейдет автоматически) и сканируйте:", justify="center")
 desc_scan.pack(pady=(10, 2))
 scan_entry = ttk.Entry(tab_scan, font=("Menlo", 14), width=35)
 scan_entry.pack(pady=5)
