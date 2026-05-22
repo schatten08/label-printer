@@ -249,7 +249,7 @@ def update_texts(lang):
     global current_lang
     current_lang = lang
     l = LANGS[lang]
-    header.config(text="??? " + l["title"])
+    header.config(text="🖨️ " + l["title"])
     printer_lbl.config(text=l["printer"])
     printer_warning.config(text=l["warn"])
     notebook.tab(0, text=l["t_batch"])
