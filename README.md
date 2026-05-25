@@ -7,16 +7,18 @@ This program allows you to quickly print a series of labels. It features a tabbe
 1. **Batch Printing Mode**: Paste a list of asset numbers separated by spaces, commas, or new lines (ideal for copying directly from ServiceNow HAM or Excel) to print them all at once.
 2. **Scanner Dictionary Mode**: Paste a two-column mapping of Serial Numbers (SN) to Labels. Connect a barcode scanner, scan the SN on a physical box, and the program will automatically find and print the corresponding Label in real-time with audio feedback.
 
-The application automatically scans for installed printers and populates a dropdown menu, defaulting to the Brother printer. The input is automatically sanitized from unwanted special characters before printing. The graphical interface is written in Python (Tkinter). For Windows, the interaction with the printer driver is handled via a PowerShell script using official Brother bPAC3 COM objects. For macOS, it uses dynamic barcode image generation and the CUPS print server.
+The application automatically scans for installed printers and populates a dropdown menu, defaulting to the Brother printer. The input is automatically sanitized from unwanted special characters before printing. The graphical interface is written in Python (Tkinter). For Windows, the application uses `pywin32` to connect natively to the official Brother bPAC3 COM objects without any external scripts. For macOS, it uses dynamic barcode image generation and the `brother_ql` print engine.
 
 ## Requirements
-- OS: **Windows** (Primary version via bPAC SDK) or **macOS** (Alternative version via CUPS).
+- OS: **Windows** (Primary version via bPAC SDK) or **macOS** (Alternative version via CUPS & brother_ql).
 - Installed Python 3 (added to the PATH environment variable).
 - Installed printer **Brother QL-810W** (or another supported Brother printer) and its drivers.
 
 ### Windows Setup
-- Installed **Brother bPAC3 SDK**.
-  - **How to install SDK**: Download the [Brother bPAC Client SDK](https://support.brother.com/g/s/es/dev/en/bpac/index.html) from the official Brother Developer Center (ensure you select your Windows version: 32-bit or 64-bit). Run the installer. Since our script uses standard Windows COM objects (`bpac.Document`), you only need a standard installation. The script will automatically connect to the SDK without needing hardcoded paths to `.dll` files.
+1. Open the terminal/command prompt and install the required library:
+   `pip install pywin32`
+2. Install the **Brother bPAC3 SDK**.
+   - **How to install SDK**: Download the [Brother bPAC Client SDK](https://support.brother.com/g/s/es/dev/en/bpac/index.html) from the official Brother Developer Center (ensure you select your Windows version: 32-bit or 64-bit). Run the installer. Since our script uses standard Windows COM objects (`bpac.Document`), you only need a standard installation.
 
 
 ### Hardware Scanner Setup (Zebra DS22 / Bluetooth)
@@ -66,7 +68,7 @@ To run the application natively without keeping a Terminal window open, you can 
 4. Click **File -> Save**, name it `Label Printer`, and save it to your Applications folder or Desktop. You can now launch the printer GUI like any other Mac app.
 
 ## Project Structure
-- `windows_version/print_gui.py` — The main graphical user interface for Windows (Python/Tkinter).
-- `print.ps1` — The PowerShell script that communicates with the printer via the COM/bPAC SDK.
-- `Label.lbx` — The Brother label template.
-- `Run Label Printer.bat` — Batch script for quick UI launch.
+- `src/windows_version/print_gui.py` — The pure Python graphical user interface and print engine for Windows.
+- `src/windows_version/Label.lbx` — The Brother label template.
+- `src/windows_version/Run Label Printer.bat` — Batch script for quick UI launch.
+- `src/mac_version/print_gui_mac.py` — The dedicated version of the app optimized for macOS.
