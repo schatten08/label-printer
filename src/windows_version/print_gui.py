@@ -57,6 +57,9 @@ def send_to_printer(text, status_widget, btn_widget=None):
         try:
             try:
                 import win32com.client
+                import pythoncom
+                # Для работы с COM-объектами в отдельном фоновом потоке Python обязательна инициализация!
+                pythoncom.CoInitialize() 
             except ImportError:
                 window.after(0, lambda: messagebox.showerror(
                     "Необходима билиотека", 
@@ -109,6 +112,12 @@ def send_to_printer(text, status_widget, btn_widget=None):
             window.after(0, lambda err=e: messagebox.showerror("Системная ошибка", f"Ошибка COM-объекта bPAC:\n{err}"))
             window.after(0, lambda err=e: status_widget.config(text=f"❌ Ошибка", foreground="red"))
         finally:
+            try:
+                import pythoncom
+                pythoncom.CoUninitialize()
+            except Exception:
+                pass
+                
             if btn_widget:
                 window.after(0, lambda: btn_widget.config(state=tk.NORMAL))
 
