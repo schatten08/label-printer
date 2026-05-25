@@ -103,8 +103,12 @@ def send_to_printer(text, status_widget, btn_widget=None):
                 # Закидываем в очередь печати 1 копию и переходим к следующему
                 doc.PrintOut(1, 0)
                 
-            doc.EndPrint()
-            doc.Close()
+            # Из-за особенностей библиотеки pywin32, некоторые функции без параметров могут возвращаться как переменные (свойства)
+            if callable(doc.EndPrint): doc.EndPrint()
+            else: _ = doc.EndPrint
+            
+            if callable(doc.Close): doc.Close()
+            else: _ = doc.Close
 
             window.after(0, lambda: status_widget.config(text=f"✅ Напечатано: {len(numbers)} шт.", foreground="green"))
             
