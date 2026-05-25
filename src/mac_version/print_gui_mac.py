@@ -202,11 +202,12 @@ def play_sound(sound_type):
 
 def generate_label_image(text_str, output_path):
     Code128 = barcode.get_barcode_class('code128')
+    # Математика на базе скриншота из P-Touch:
     options = {
         "write_text": False,
-        "module_height": 9.0,   
-        "module_width": 0.5,    # Делаем сам штрихкод плотнее и компактнее
-        "quiet_zone": 0.0,      # Отключаем встроенные отступы самого штрихкода!
+        "module_height": 11.0,  # Около 0.4"
+        "module_width": 0.45,   # Штрихкод займет подходящую ширину
+        "quiet_zone": 0.0,      # Отключаем дефолтные отступы, сделаем свои точные
     }
     
     temp_bc = output_path + "_bc"
@@ -224,7 +225,7 @@ def generate_label_image(text_str, output_path):
             "/System/Library/Fonts/Times.ttc",
             "/Library/Fonts/Times New Roman.ttf"
         ]
-        font_size = 65 # Делаем шрифт максимально похожим на эталонный
+        font_size = 55 # Идеально ложится в пропорции на скриншоте P-Touch
         for fp in font_paths:
             try:
                 import os
@@ -238,7 +239,7 @@ def generate_label_image(text_str, output_path):
             font = ImageFont.load_default()
             
         canvas_w = 696 
-        top_text = f"EPAM {text_str}"
+        top_text = f"EPAm {text_str}"
         
         dummy_draw = ImageDraw.Draw(Image.new('RGB', (1,1)))
         try:
@@ -249,22 +250,27 @@ def generate_label_image(text_str, output_path):
             text_w, text_h = dummy_draw.textsize(top_text, font=font)
             text_h = max(text_h, font_size)
         
-        # Абсолютно в ноль убираем пустые поля
-        margin_y = 0
-        spacing = 5
+        # P-Touch Margins: 0.12". При 300 DPI 0.12 * 300 = ровно 36 пикселей.
+        margin_y = 36 
+        spacing = 15 # Фиксированное пустое место между текстом и началом палок
         
-        canvas_h = text_h + bc_img.height + spacing + (margin_y * 2)
+        content_h = text_h + bc_img.height + spacing
+        canvas_h = content_h + (margin_y * 2)
+        
+        # Минимальный шаг автоматической обрезки (Length: Auto) у мака 1 дюйм (300 пикселей)
+        if canvas_h < 300:
+            extra = 300 - canvas_h
+            margin_y += extra // 2
+            canvas_h = 300
         
         canvas = Image.new('RGB', (canvas_w, canvas_h), 'white')
         draw = ImageDraw.Draw(canvas)
         
         text_x = (canvas_w - text_w) // 2
-        text_y = margin_y
-        draw.text((text_x, text_y), top_text, fill="black", font=font)
+        draw.text((text_x, margin_y), top_text, fill="black", font=font)
         
         bc_x = (canvas_w - bc_img.width) // 2
-        bc_y = text_y + text_h + spacing
-        canvas.paste(bc_img, (bc_x, bc_y))
+        canvas.paste(bc_img, (bc_x, margin_y + text_h + spacing))
 
         canvas.save(output_path + ".png", "PNG", dpi=(300.0, 300.0))
         
