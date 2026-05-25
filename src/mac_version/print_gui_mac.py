@@ -640,20 +640,21 @@ def export_inventory():
         return
         
     default_name = f"inventory_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv"
-    filepath = filedialog.asksaveasfilename(defaultextension=".csv", initialfile=default_name, filetypes=[("CSV файлы", "*.csv"), ("Текстовые файлы", "*.txt")])
+    filepath = filedialog.asksaveasfilename(defaultextension=".csv", initialfile=default_name, filetypes=[("CSV (Excel)", "*.csv")])
     if not filepath: return
     
     try:
         with open(filepath, 'w', encoding='utf-8-sig', newline='') as f:
-            f.write("Status;Label;Model\n")
+            import csv
+            writer = csv.writer(f, delimiter=';')
+            writer.writerow(["Status", "Label", "Model"])
             for item in inv_tree.get_children():
-                vals = inv_tree.item(item)['values']
-                f.write(f"{vals[0]};{vals[1]};{vals[2]}\n")
-        messagebox.showinfo("Сохранено", f"Отчет успешно сохранен в:\n{filepath}")
+                writer.writerow(inv_tree.item(item)['values'])
+        messagebox.showinfo("Сохранено", f"Отчет успешно сохранен для Excel в:\n{filepath}")
     except Exception as e:
         messagebox.showerror("Ошибка", f"Не удалось сохранить файл:\n{e}")
 
-btn_export = ttk.Button(tab_inv, text="💾 Экспорт отчета", command=export_inventory)
+btn_export = ttk.Button(tab_inv, text="💾 Экспорт отчета (Excel)", command=export_inventory)
 btn_export.pack(pady=10)
 
 current_theme = load_theme_pref()
