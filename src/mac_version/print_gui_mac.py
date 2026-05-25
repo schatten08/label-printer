@@ -537,12 +537,17 @@ inv_data = {}
 inv_items_map = {}
 
 def load_inventory():
+    raw_content = inv_dict_input.get("1.0", tk.END).strip()
+    if not raw_content:
+        messagebox.showwarning("Внимание", "Пожалуйста, вставьте список оборудования (базу) перед загрузкой.")
+        return
+
     for item in inv_tree.get_children():
         inv_tree.delete(item)
     inv_data.clear()
     inv_items_map.clear()
     
-    raw_text = inv_dict_input.get("1.0", tk.END).strip().split('\n')
+    raw_text = raw_content.split('\n')
     for line in raw_text:
         parts = re.split(r'[\t,;]+', line.strip())
         parts = [p.strip() for p in parts if p.strip()]
