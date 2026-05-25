@@ -27,6 +27,17 @@ except Exception:
 
 def get_windows_printers():
     try:
+        import win32com.client
+        p = win32com.client.Dispatch("bpac.Printer")
+        printers = p.GetInstalledPrinters()
+        if printers:
+            return list(printers)
+    except ImportError:
+        pass # Fallback to PowerShell if pywin32 is not installed yet
+    except Exception:
+        pass
+
+    try:
         cmd = ["powershell", "-NoProfile", "-Command", "Get-Printer | Select-Object -ExpandProperty Name"]
         # Используем cp866 для кириллических имен принтеров в русской Windows
         # creationflags=0x08000000 предотвращает моргание черного окна консоли
@@ -44,24 +55,59 @@ def send_to_printer(text, status_widget, btn_widget=None):
 
     def run_script():
         try:
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-            ps_script = os.path.join(script_dir, "print.ps1")
-            
-            cmd = [
-                "powershell.exe", "-ExecutionPolicy", "Bypass", 
-                "-WindowStyle", "Hidden", "-File", ps_script, 
-                "-Text1", text, "-PrinterName", selected_printer
-            ]
-            result = subprocess.run(cmd, capture_output=True, text=True, encoding="cp866")
+            try:
+                import win32com.client
+            except ImportError:
+                window.after(0, lambda: messagebox.showerror(
+                    "Необходима билиотека", 
+                    "Для работы Windows-версии приложения на чистом Python теперь требуется библиотека pywin32.\n\n"
+                    "Закройте приложение, откройте консоль от имени Администратора (или просто терминал) и введите команду:\n\n"
+                    "pip install pywin32\n\n"
+                    "После установки запустите приложение снова."
+                ))
+                window.after(0, lambda: status_widget.config(text="❌ Отсутствует pywin32", foreground="red"))
+                return
 
-            if result.returncode == 0:
-                window.after(0, lambda: status_widget.config(text=f"✅ Напечатано: {text}", foreground="green"))
-            else:
-                err_msg = result.stdout.strip() if result.stdout else "Неизвестная ошибка принтера"
-                window.after(0, lambda: messagebox.showerror("Ошибка печати", f"Скрипт сообщил об ошибке:\n{err_msg}"))
-                window.after(0, lambda: status_widget.config(text="❌ Ошибка принтера", foreground="red"))
+            import re
+            numbers = [n.strip() for n in re.split(r'[,;\s]+', text) if n.strip()]
+            if not numbers:
+                return
+
+            doc = win32com.client.Dispatch("bpac.Document")
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            template_path = os.path.join(script_dir, "Label.lbx")
+
+            if not doc.Open(template_path):
+                window.after(0, lambda: messagebox.showerror("Ошибка", f"Не удалось открыть файл шаблона:\n{template_path}"))
+                window.after(0, lambda: status_widget.config(text="❌ Ошибка шаблона", foreground="red"))
+                return
+
+            # Выставляем принтер
+            doc.SetPrinter(selected_printer, False)
+            
+            # Открываем канал печати 1 раз (Пакетная печать быстрее)
+            doc.StartPrint("Batch Labels", 0)
+
+            for num in numbers:
+                lbl = doc.GetObject("Label")
+                if lbl:
+                    lbl.Text = num
+                
+                bc = doc.GetObject("BarCode")
+                if bc:
+                    bc.Text = num
+                
+                # Закидываем в очередь печати 1 копию и переходим к следующему
+                doc.PrintOut(1, 0)
+                
+            doc.EndPrint()
+            doc.Close()
+
+            window.after(0, lambda: status_widget.config(text=f"✅ Напечатано: {len(numbers)} шт.", foreground="green"))
+            
         except Exception as e:
-            window.after(0, lambda err=e: status_widget.config(text=f"❌ Ошибка: {err}", foreground="red"))
+            window.after(0, lambda err=e: messagebox.showerror("Системная ошибка", f"Ошибка COM-объекта bPAC:\n{err}"))
+            window.after(0, lambda err=e: status_widget.config(text=f"❌ Ошибка", foreground="red"))
         finally:
             if btn_widget:
                 window.after(0, lambda: btn_widget.config(state=tk.NORMAL))
