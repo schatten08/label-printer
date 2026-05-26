@@ -269,7 +269,6 @@ LANGS = {
     "ru": {
         "title": "Печать этикеток",
         "printer": "Принтер:",
-        "warn": "⚠️ Убедитесь, что принтер физически включен кнопкой питания!",
         "t_batch": " 📝 Список (Массовая) ",
         "d_batch": "Введите инвентарные номера (можно таблицей):",
         "btn_p": "Отправить на принтер",
@@ -288,7 +287,6 @@ LANGS = {
     "en": {
         "title": "Label Printing",
         "printer": "Printer:",
-        "warn": "⚠️ Make sure the printer is physically turned on!",
         "t_batch": " 📝 List (Batch) ",
         "d_batch": "Enter inventory numbers (table format supported):",
         "btn_p": "Send to Printer",
@@ -333,7 +331,6 @@ def update_texts(lang):
     l = LANGS[lang]
     header.config(text="🖨️ " + l["title"])
     printer_lbl.config(text=l["printer"])
-    printer_warning.config(text=l["warn"])
     notebook.tab(0, text=l["t_batch"])
     desc_batch.config(text=l["d_batch"])
     print_btn.config(text=l["btn_p"])
@@ -445,10 +442,6 @@ printer_lbl.pack(side=tk.LEFT)
 printer_var = tk.StringVar(value=default_p)
 printer_cb = ttk.Combobox(printer_frame, textvariable=printer_var, values=printers_list, state="readonly")
 printer_cb.pack(side=tk.RIGHT, expand=True, fill=tk.X, padx=(10, 0))
-
-# Подсказка-напоминание о необходимости включить принтер
-printer_warning = ttk.Label(window, text="⚠️ Убедитесь, что принтер физически включен кнопкой питания!", style='Warning.TLabel')
-printer_warning.pack(pady=(0, 5))
 
 notebook = ttk.Notebook(window)
 notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
