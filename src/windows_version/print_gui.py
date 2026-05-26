@@ -617,9 +617,9 @@ def on_inv_scan(event):
                 
         inv_tree.see(target_id)
         update_inv_stats()
-        threading.Thread(target=play_sound, args=("success",), daemon=True).start()
+        threading.Thread(target=lambda: winsound.Beep(2000, 150), daemon=True).start()
     else:
-        threading.Thread(target=play_sound, args=("error",), daemon=True).start()
+        threading.Thread(target=lambda: winsound.Beep(500, 400), daemon=True).start()
         messagebox.showwarning("Не найдено", f"Оборудование не из списка!\nОтсканировано: {sn}")
 
 inv_scan_entry.bind("<Return>", on_inv_scan)
