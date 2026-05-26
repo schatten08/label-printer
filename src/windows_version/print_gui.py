@@ -77,6 +77,17 @@ def send_to_printer(text, status_widget, btn_widget=None):
                 return
 
             doc = win32com.client.Dispatch("bpac.Document")
+            
+            # Предварительная проверка включен ли принтер
+            try:
+                printer_checker = win32com.client.Dispatch("bpac.Printer")
+                if not printer_checker.IsPrinterOnline(selected_printer):
+                    window.after(0, lambda: messagebox.showwarning("Принтер недоступен", f"Принтер '{selected_printer}' выключен или не подключен.\n\nПожалуйста, включите устройство и проверьте USB/Wi-Fi соединение."))
+                    window.after(0, lambda: status_widget.config(text="❌ Принтер Off-line", foreground="red"))
+                    return
+            except Exception as e:
+                print("Skipping online check:", e)
+
             script_dir = os.path.dirname(os.path.abspath(__file__))
             template_path = os.path.join(script_dir, "Label.lbx")
 
