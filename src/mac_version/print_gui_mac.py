@@ -353,16 +353,32 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
                     pass
                     
             # На macOS (CUPS) команда 'lp' всегда "успешна", если задание попало в очередь.
-            # Поэтому мы дополнительно проверяем статус очереди через lpstat
+            # CUPS понимает, что принтер не отвечает, не сразу, а во время попытки отправить данные.
             import time
-            time.sleep(0.5) # Даем CUPS полсекунды на проверку связи с принтером
-            lpstat_res = subprocess.run(["lpstat", "-p", selected_printer], capture_output=True, text=True).stdout.lower()
+            printer_offline = False
+            for _ in range(6): # Опрашиваем систему до 3 секунд
+                time.sleep(0.5) 
+                lpstat_res = subprocess.run(["lpstat", "-p", selected_printer], capture_output=True, text=True).stdout.lower()
+                lpq_res = subprocess.run(["lpq", "-P", selected_printer], capture_output=True, text=True).stdout.lower()
+                combined = lpstat_res + " " + lpq_res
+                
+                # Ищем английские и русские маркеры сбоя или паузы в CUPS
+                errors = [
+                    "waiting", "not connected", "offline", "paused", "unplugged", 
+                    "stopped", "not ready", "приостановлен", "отключен", 
+                    "не подключ", "не готов", "пауз", "ожида", "автономн", "сбой",
+                    "not responding", "не отвечает"
+                ]
+                
+                if any(err in combined for err in errors):
+                    printer_offline = True
+                    break
             
-            if any(err in lpstat_res for err in ["waiting for printer", "not connected", "offline", "paused", "unplugged", "stopped"]):
+            if printer_offline:
                 window.after(0, lambda: messagebox.showwarning(
                     "Принтер недоступен", 
-                    f"Задание отправлено в очередь, но принтер '{selected_printer}' выключен или отключен от Mac!\n\n"
-                    "Проверьте питание и кабель."
+                    f"Задание отправлено в очередь, но принтер '{selected_printer}' выключен или не отвечает!\n\n"
+                    "Возможно он не подключен по USB/Wi-Fi, либо выключено питание."
                 ))
                 window.after(0, lambda: status_widget.config(text="❌ Принтер Off-line", foreground="red"))
             else:
