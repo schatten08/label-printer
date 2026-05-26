@@ -620,7 +620,7 @@ inv_scan_frame.pack(fill=tk.X, padx=10, pady=5)
 inv_scan_lbl = ttk.Label(inv_scan_frame, text="2. Сканируйте:")
 inv_scan_lbl.pack(side=tk.LEFT)
 inv_scan_entry = ttk.Entry(inv_scan_frame, font=("Menlo", 14), width=20)
-inv_scan_entry.pack(side=tk.LEFT, padx=10)
+inv_scan_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=10)
 
 ttk.Label(inv_scan_frame, textvariable=inv_stats_var, font=("Helvetica", 10, "bold")).pack(side=tk.RIGHT)
 
