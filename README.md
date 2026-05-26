@@ -33,7 +33,7 @@ For macOS, the application dynamically generates barcode images and bypasses the
 2. Ensure your Brother printer is added in macOS "Printers & Scanners" settings. The script will automatically detect any printer containing "Brother" or "QL" in its name and map the job to print directly over `lp -o raw`.
 
 ## Usage
-*The application provides two tabs/modes of operation:*
+*The application provides three tabs/modes of operation:*
 
 ### Tab 1: Batch Printing (List)
 1. Paste the copied asset/label numbers into the large text box.
@@ -43,6 +43,14 @@ For macOS, the application dynamically generates barcode images and bypasses the
 1. Paste a two-column list (SN and Label) from Excel or ServiceNow into the upper dictionary field. Both horizontal formats and vertical sequential formats are supported.
 2. Place your cursor in the bottom scanner input field.
 3. Use a physical barcode scanner to scan the SN on your boxes. The program will parse the input (ignoring hardware 'S' prefixes), map it to the label, and print it automatically. You'll hear a system beep upon success or a different tone if the SN isn't found.
+
+### Tab 3: Inventory Audit
+1. Paste your device database (e.g., from Excel, containing SN/Label and Model) into the top input field.
+2. Click the "Load Database" button. This will parse the data and populate an interactive, searchable checklist displaying all pending equipment.
+3. Scan barcodes using the bottom scanner input field.
+4. The scanner uses smart string matching to locate the scanned serial number, instantly marks it as "Found" (highlighting it green) in the checklist, and plays a success chime. If not found, it alerts you.
+5. Track your overall scanning progress in real-time (`Found: X / Y`).
+6. Once the audit is complete, click "Export to CSV" to generate a clean, Excel-ready report (UTF-8 encoded with semicolon delimiters) of your inventory statuses.
 
 ### Launching on Windows
 1. Ensure the printer is connected, turned on, and has the correct label roll installed.
