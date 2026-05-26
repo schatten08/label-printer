@@ -352,38 +352,37 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
                 except:
                     pass
                     
-            # На macOS (CUPS) команда 'lp' всегда "успешна", если задание попало в очередь.
-            # CUPS понимает, что принтер не отвечает, не сразу, а во время попытки отправить данные.
-            import time
-            printer_offline = False
-            for _ in range(6): # Опрашиваем систему до 3 секунд
-                time.sleep(0.5) 
-                lpstat_res = subprocess.run(["lpstat", "-p", selected_printer], capture_output=True, text=True).stdout.lower()
-                lpq_res = subprocess.run(["lpq", "-P", selected_printer], capture_output=True, text=True).stdout.lower()
-                combined = lpstat_res + " " + lpq_res
-                
-                # Ищем английские и русские маркеры сбоя или паузы в CUPS
-                errors = [
-                    "waiting", "not connected", "offline", "paused", "unplugged", 
-                    "stopped", "not ready", "приостановлен", "отключен", 
-                    "не подключ", "не готов", "пауз", "ожида", "автономн", "сбой",
-                    "not responding", "не отвечает"
-                ]
-                
-                if any(err in combined for err in errors):
-                    printer_offline = True
-                    break
+            # Подсистема Mac (CUPS) скрывает реальный статус железа около 30 секунд.
+            # Самый надежный способ узнать завис ли принтер - проверить убывает ли очередь заданий:
+            def get_queue_size():
+                res = subprocess.run(["lpstat", "-o", selected_printer], capture_output=True, text=True).stdout
+                return len([line for line in res.split('\n') if line.strip()])
+
+            initial_jobs = get_queue_size()
             
-            if printer_offline:
-                window.after(0, lambda: messagebox.showwarning(
-                    "Принтер недоступен", 
-                    f"Задание отправлено в очередь, но принтер '{selected_printer}' выключен или не отвечает!\n\n"
-                    "Возможно он не подключен по USB/Wi-Fi, либо выключено питание."
-                ))
-                window.after(0, lambda: status_widget.config(text="❌ Принтер Off-line", foreground="red"))
-            else:
+            if initial_jobs == 0:
+                # Очередь пуста моментально - принтер съел файл
                 window.after(0, lambda: status_widget.config(text="✅ Успешно отправлено!", foreground="green"))
                 window.after(3000, lambda: status_widget.config(text=""))
+            else:
+                import time
+                time.sleep(2.0) # Ждем 2 секунды, чтобы дать принтеру шанс
+                current_jobs = get_queue_size()
+                
+                if current_jobs >= initial_jobs:
+                    # Принтер не смог забрать ни одного задания за 2 секунды - он выключен
+                    # Очищаем очередь команд 
+                    subprocess.run(["cancel", "-a", selected_printer], capture_output=True)
+                    window.after(0, lambda: messagebox.showwarning(
+                        "Принтер не отвечает", 
+                        f"Задания зависли в системной очереди macOS.\n\n"
+                        f"Принтер '{selected_printer}' выключен, находится в спящем режиме или потерял связь.\n"
+                        "Все зависшие задания удалены, чтобы избежать случайной печати."
+                    ))
+                    window.after(0, lambda: status_widget.config(text="❌ Принтер Off-line", foreground="red"))
+                else:
+                    window.after(0, lambda: status_widget.config(text="✅ Успешно отправлено!", foreground="green"))
+                    window.after(3000, lambda: status_widget.config(text=""))
         except Exception as e:
             window.after(0, lambda e=e: messagebox.showerror("Системная ошибка", f"Детали:\n{e}"))
             window.after(0, lambda: status_widget.config(text="❌ Ошибка", foreground="red"))
