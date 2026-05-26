@@ -352,8 +352,22 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
                 except:
                     pass
                     
-            window.after(0, lambda: status_widget.config(text="✅ Успешно отправлено!", foreground="green"))
-            window.after(3000, lambda: status_widget.config(text=""))
+            # На macOS (CUPS) команда 'lp' всегда "успешна", если задание попало в очередь.
+            # Поэтому мы дополнительно проверяем статус очереди через lpstat
+            import time
+            time.sleep(0.5) # Даем CUPS полсекунды на проверку связи с принтером
+            lpstat_res = subprocess.run(["lpstat", "-p", selected_printer], capture_output=True, text=True).stdout.lower()
+            
+            if any(err in lpstat_res for err in ["waiting for printer", "not connected", "offline", "paused", "unplugged", "stopped"]):
+                window.after(0, lambda: messagebox.showwarning(
+                    "Принтер недоступен", 
+                    f"Задание отправлено в очередь, но принтер '{selected_printer}' выключен или отключен от Mac!\n\n"
+                    "Проверьте питание и кабель."
+                ))
+                window.after(0, lambda: status_widget.config(text="❌ Принтер Off-line", foreground="red"))
+            else:
+                window.after(0, lambda: status_widget.config(text="✅ Успешно отправлено!", foreground="green"))
+                window.after(3000, lambda: status_widget.config(text=""))
         except Exception as e:
             window.after(0, lambda e=e: messagebox.showerror("Системная ошибка", f"Детали:\n{e}"))
             window.after(0, lambda: status_widget.config(text="❌ Ошибка", foreground="red"))
