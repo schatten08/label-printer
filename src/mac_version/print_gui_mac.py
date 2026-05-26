@@ -451,6 +451,8 @@ def on_scan(event):
     else:
         threading.Thread(target=play_sound, args=("error",), daemon=True).start()
         scan_status.config(text=f"❌ SN не найден: {sn}", foreground="red")
+        
+    return "break"
 
 def add_context_menu(widget):
     menu = tk.Menu(widget, tearoff=0)
@@ -644,21 +646,29 @@ def on_inv_scan(event):
                 break
                 
     if target_id:
-        item_data = inv_tree.item(target_id)
-        sn_key = item_data['values'][1]
-        inv_tree.item(target_id, values=("✅ Найдено", sn_key, item_data['values'][2]), tags=('found',))
-        
-        for k, v in inv_data.items():
-            if v['item_id'] == target_id:
-                v["status"] = "✅ Найдено"
-                break
-                
-        inv_tree.see(target_id)
-        update_inv_stats()
-        threading.Thread(target=play_sound, args=("success",), daemon=True).start()
+        try:
+            item_data = inv_tree.item(target_id)
+            vals = item_data.get('values', [])
+            sn_key = vals[1] if len(vals) > 1 else sn
+            rest_key = vals[2] if len(vals) > 2 else ""
+            
+            inv_tree.item(target_id, values=("✅ Найдено", sn_key, rest_key), tags=('found',))
+            
+            for k, v in inv_data.items():
+                if v['item_id'] == target_id:
+                    v["status"] = "✅ Найдено"
+                    break
+                    
+            inv_tree.see(target_id)
+            update_inv_stats()
+            threading.Thread(target=play_sound, args=("success",), daemon=True).start()
+        except Exception as e:
+            print(e)
     else:
         threading.Thread(target=play_sound, args=("error",), daemon=True).start()
         messagebox.showwarning("Не найдено", f"Оборудование не из списка!\nОтсканировано: {sn}")
+
+    return "break"
 
 inv_scan_entry.bind("<Return>", on_inv_scan)
 
