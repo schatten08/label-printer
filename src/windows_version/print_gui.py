@@ -177,15 +177,17 @@ def on_scan(event):
         parts = [p for p in parts if p]
         
         if len(parts) >= 2:
-            # Классический случай: "SN Label" в одной строке
-            mapping[parts[0]] = parts[1]
+            # Двусторонняя связь (SN -> Label и Label -> SN)
+            mapping[parts[0]] = parts[-1]
+            mapping[parts[-1]] = parts[0]
         elif len(parts) == 1 and i + 1 < len(raw_dict):
             # Случай вертикальной вставки: "SN" на одной строке, "Label" на следующей
             next_line_parts = re.split(r'[\t,; ]+', raw_dict[i+1].strip())
             next_line_parts = [p for p in next_line_parts if p]
             
             if len(next_line_parts) >= 1:
-                mapping[parts[0]] = next_line_parts[0]
+                mapping[parts[0]] = next_line_parts[-1]
+                mapping[next_line_parts[-1]] = parts[0]
             
     # Умный поиск: точное совпадение ИЛИ совпадение без префикса 'S'
     if sn in mapping:

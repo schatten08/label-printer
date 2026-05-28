@@ -425,12 +425,14 @@ def on_scan(event):
         parts = [p for p in parts if p]
         
         if len(parts) >= 2:
-            mapping[parts[0]] = parts[1]
+            mapping[parts[0]] = parts[-1]
+            mapping[parts[-1]] = parts[0]
         elif len(parts) == 1 and i + 1 < len(raw_dict):
             next_line_parts = re.split(r'[\t,; ]+', raw_dict[i+1].strip())
             next_line_parts = [p for p in next_line_parts if p]
             if len(next_line_parts) >= 1:
-                mapping[parts[0]] = next_line_parts[0]
+                mapping[parts[0]] = next_line_parts[-1]
+                mapping[next_line_parts[-1]] = parts[0]
             
     if sn in mapping:
         label = mapping[sn]
