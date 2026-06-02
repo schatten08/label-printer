@@ -207,7 +207,7 @@ def play_sound(sound_type):
     except:
         pass
 
-def generate_label_image(text_str, output_path):
+def generate_label_image(text_str, output_path, use_epam=True):
     Code128 = barcode.get_barcode_class('code128')
     options = {
         "write_text": False,
@@ -245,7 +245,7 @@ def generate_label_image(text_str, output_path):
             font = ImageFont.load_default()
             
         canvas_w = 696 
-        top_text = f"{text_str}"
+        top_text = f"EPAM {text_str}" if use_epam else f"{text_str}"
         
         dummy_draw = ImageDraw.Draw(Image.new('RGB', (1,1)))
         try:
@@ -284,7 +284,7 @@ def generate_label_image(text_str, output_path):
     except Exception as e:
         print("Ошибка генерации новой этикетки:", e)
 
-def send_to_printer(text_data, status_widget, btn_widget=None):
+def send_to_printer(text_data, status_widget, btn_widget=None, use_epam=True):
     try:
         import barcode
         import PIL
@@ -319,7 +319,7 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
                 import subprocess
                 
                 temp_file = os.path.join(tempfile.gettempdir(), f"label_{clean_num}")
-                generate_label_image(clean_num, temp_file)
+                generate_label_image(clean_num, temp_file, use_epam=use_epam)
                 image_path = temp_file + ".png"
                 bin_path = temp_file + ".bin"
                 
@@ -742,7 +742,7 @@ def on_free_print(event=None):
             clean_lines.append(line)
             
     if not clean_lines: return
-    send_to_printer(clean_lines, free_status)
+    send_to_printer(clean_lines, free_status, use_epam=False)
 
 btn_free_print = ttk.Button(tab_free, text="Напечатать", command=on_free_print)
 btn_free_print.pack(pady=(5, 10), ipadx=10, ipady=5)

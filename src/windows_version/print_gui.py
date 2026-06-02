@@ -47,7 +47,7 @@ def get_windows_printers():
     except Exception:
         return ["Ошибка поиска принтеров"]
 
-def send_to_printer(text, status_widget, btn_widget=None):
+def send_to_printer(text, status_widget, btn_widget=None, use_epam=True):
     selected_printer = printer_var.get()
     status_widget.config(text="⏳ Идет отправка...", foreground="blue")
     if btn_widget:
@@ -109,7 +109,7 @@ def send_to_printer(text, status_widget, btn_widget=None):
             for num in numbers:
                 lbl = doc.GetObject("Label")
                 if lbl:
-                    lbl.Text = num
+                    lbl.Text = f"EPAM {num}" if use_epam else f"{num}"
                 
                 bc = doc.GetObject("BarCode")
                 if bc:
@@ -703,7 +703,7 @@ def on_free_print(event=None):
             clean_lines.append(line)
             
     if not clean_lines: return
-    send_to_printer(clean_lines, free_status)
+    send_to_printer(clean_lines, free_status, btn_free_print, use_epam=False)
 
 btn_free_print = ttk.Button(tab_free, text="Напечатать", command=on_free_print)
 btn_free_print.pack(pady=(5, 10), ipadx=10, ipady=5)
