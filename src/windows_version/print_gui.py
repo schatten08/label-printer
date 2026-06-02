@@ -109,7 +109,13 @@ def send_to_printer(text, status_widget, btn_widget=None, use_epam=True):
             for num in numbers:
                 lbl = doc.GetObject("Label")
                 if lbl:
-                    lbl.Text = f"EPAM {num}" if use_epam else f"{num}"
+                    lbl.Text = num
+                    
+                upam_lbl = doc.GetObject("EPAm")
+                if upam_lbl: upam_lbl.Text = "EPAM" if use_epam else ""
+                
+                upam_lbl2 = doc.GetObject("EPAM")
+                if upam_lbl2: upam_lbl2.Text = "EPAM" if use_epam else ""
                 
                 bc = doc.GetObject("BarCode")
                 if bc:
