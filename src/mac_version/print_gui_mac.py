@@ -123,6 +123,8 @@ def apply_theme(theme_name):
         dict_input.configure(bg=input_bg, fg=input_fg, insertbackground=input_fg)
     if 'inv_dict_input' in globals():
         inv_dict_input.configure(bg=input_bg, fg=input_fg, insertbackground=input_fg)
+    if 'free_entry' in globals():
+        free_entry.configure(bg=input_bg, fg=input_fg, insertbackground=input_fg)
 
 
 def get_lang():
@@ -163,6 +165,14 @@ def update_texts(lang):
     inv_tree.heading("status", text=l["c_stat"])
     inv_tree.heading("sn", text=l["c_lbl"])
     inv_tree.heading("rest", text=l["c_mod"])
+    
+    try:
+        notebook.tab(3, text=l.get("t_free", " 🔤 Direct Print "))
+        desc_free.config(text=l.get("d_free", "Text (Inventory ID, custom name, etc):"))
+        btn_free_print.config(text=l.get("btn_f", "Print Single Label"))
+    except Exception:
+        pass
+        
     # Update inventory contents on lang switch
     if 'inv_tree' in globals() and 'inv_data' in globals():
         for sn, data in inv_data.items():
@@ -235,7 +245,7 @@ def generate_label_image(text_str, output_path):
             font = ImageFont.load_default()
             
         canvas_w = 696 
-        top_text = f"EPAM {text_str}"
+        top_text = f"{text_str}"
         
         dummy_draw = ImageDraw.Draw(Image.new('RGB', (1,1)))
         try:
@@ -292,8 +302,12 @@ def send_to_printer(text_data, status_widget, btn_widget=None):
     def run_script():
         try:
             import re
-            numbers = re.split(r'[,;\s]+', text_data)
             selected_printer = printer_var.get()
+            
+            if isinstance(text_data, list):
+                numbers = [str(n).strip() for n in text_data if str(n).strip()]
+            else:
+                numbers = [n.strip() for n in re.split(r'[,;\s]+', str(text_data)) if n.strip()]
                 
             for num in numbers:
                 clean_num = num.strip()
@@ -449,10 +463,14 @@ def on_scan(event):
     if label:
         label = re.sub(r'[^\w\s\-,;]', '', label)
         threading.Thread(target=play_sound, args=("success",), daemon=True).start()
-        send_to_printer(label, scan_status)
+        send_to_printer([label], scan_status)
     else:
         threading.Thread(target=play_sound, args=("error",), daemon=True).start()
         scan_status.config(text=f"❌ SN не найден: {sn}", foreground="red")
+        
+        if messagebox.askyesno("Штрихкод не найден", f"Штрихкод '{sn}' не найден в словаре.\nРаспечатать его как Инвентарный номер?"):
+            sn_to_print = re.sub(r'[^\w\s\-,;]', '', sn)
+            send_to_printer([sn_to_print], scan_status)
         
     return "break"
 
@@ -696,6 +714,38 @@ def export_inventory():
 
 btn_export = ttk.Button(tab_inv, text="💾 Экспорт отчета (Excel)", command=export_inventory)
 btn_export.pack(pady=10)
+
+# --- ВКЛАДКА "ПРОИЗВОЛЬНАЯ ПЕЧАТЬ" ---
+tab_free = ttk.Frame(notebook)
+notebook.add(tab_free, text=" 🔤 Произвольная ")
+
+desc_free = ttk.Label(tab_free, text="Вставьте текст или список (разделяйте переносом строки):", justify="center")
+desc_free.pack(pady=(10, 5))
+
+free_entry = tk.Text(tab_free, height=8, width=50, font=("Menlo", 12), wrap=tk.WORD, relief=tk.FLAT, padx=10, pady=10)
+free_entry.pack(pady=5, padx=20, fill=tk.BOTH, expand=True)
+add_context_menu(free_entry)
+
+free_status = ttk.Label(tab_free, text="", font=("Helvetica", 10))
+free_status.pack(pady=5)
+
+def on_free_print(event=None):
+    raw_text = free_entry.get("1.0", tk.END).strip()
+    if not raw_text: return
+    
+    lines = [line.strip() for line in re.split(r'[\n,;]+', raw_text) if line.strip()]
+    
+    clean_lines = []
+    for line in lines:
+        line = re.sub(r'[^\w\s\-\.,;]', '', line).strip()
+        if line:
+            clean_lines.append(line)
+            
+    if not clean_lines: return
+    send_to_printer(clean_lines, free_status)
+
+btn_free_print = ttk.Button(tab_free, text="Напечатать", command=on_free_print)
+btn_free_print.pack(pady=(5, 10), ipadx=10, ipady=5)
 
 current_theme = load_theme_pref()
 apply_theme(current_theme)
