@@ -93,7 +93,13 @@ def send_to_printer(text, status_widget, btn_widget=None, use_epam=True, print_b
                 print("Skipping online check:", e)
 
             script_dir = os.path.dirname(os.path.abspath(__file__))
-            template_path = os.path.join(script_dir, "Label.lbx")
+            if print_barcode:
+                template_path = os.path.join(script_dir, "Label.lbx")
+            else:
+                template_path = os.path.join(script_dir, "Label_Free.lbx")
+                if not os.path.exists(template_path):
+                    # Если генерация не сработала, фолбэк на старый шаблон
+                    template_path = os.path.join(script_dir, "Label.lbx")
 
             if not doc.Open(template_path):
                 window.after(0, lambda: messagebox.showerror("Ошибка", f"Не удалось открыть файл шаблона:\n{template_path}"))
