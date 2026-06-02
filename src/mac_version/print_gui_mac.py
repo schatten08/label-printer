@@ -207,7 +207,7 @@ def play_sound(sound_type):
     except:
         pass
 
-def generate_label_image(text_str, output_path, use_epam=True):
+def generate_label_image(text_str, output_path, use_epam=True, print_barcode=True):
     Code128 = barcode.get_barcode_class('code128')
     options = {
         "write_text": False,
@@ -218,13 +218,19 @@ def generate_label_image(text_str, output_path, use_epam=True):
     
     temp_bc = output_path + "_bc"
     temp_bc_full = temp_bc + ".png"
-    my_bc = Code128(text_str, writer=ImageWriter())
-    my_bc.save(temp_bc, options=options)
+    
+    if print_barcode:
+        my_bc = Code128(text_str, writer=ImageWriter())
+        my_bc.save(temp_bc, options=options)
     
     try:
         from PIL import Image, ImageDraw, ImageFont
-        bc_img = Image.open(temp_bc_full)
         
+        if print_barcode:
+            bc_img = Image.open(temp_bc_full)
+        else:
+            bc_img = Image.new('RGB', (0,0))
+            
         font = None
         font_paths = [
             "/System/Library/Fonts/Supplemental/Times New Roman Bold.ttf",
@@ -260,7 +266,10 @@ def generate_label_image(text_str, output_path, use_epam=True):
         margin_y = 0
         spacing = 5
         
-        canvas_h = text_h + bc_img.height + spacing + (margin_y * 2)
+        if print_barcode:
+            canvas_h = text_h + bc_img.height + spacing + (margin_y * 2)
+        else:
+            canvas_h = text_h + (margin_y * 2)
         
         canvas = Image.new('RGB', (canvas_w, canvas_h), 'white')
         draw = ImageDraw.Draw(canvas)
@@ -269,22 +278,24 @@ def generate_label_image(text_str, output_path, use_epam=True):
         text_y = margin_y
         draw.text((text_x, text_y), top_text, fill="black", font=font)
         
-        bc_x = (canvas_w - bc_img.width) // 2
-        bc_y = text_y + text_h + spacing
-        canvas.paste(bc_img, (bc_x, bc_y))
+        if print_barcode:
+            bc_x = (canvas_w - bc_img.width) // 2
+            bc_y = text_y + text_h + spacing
+            canvas.paste(bc_img, (bc_x, bc_y))
 
         canvas.save(output_path + ".png", "PNG", dpi=(300.0, 300.0))
         
-        try:
-            import os
-            os.remove(temp_bc_full)
-        except:
-            pass
+        if print_barcode:
+            try:
+                import os
+                os.remove(temp_bc_full)
+            except:
+                pass
             
     except Exception as e:
         print("Ошибка генерации новой этикетки:", e)
 
-def send_to_printer(text_data, status_widget, btn_widget=None, use_epam=True):
+def send_to_printer(text_data, status_widget, btn_widget=None, use_epam=True, print_barcode=True):
     try:
         import barcode
         import PIL
@@ -319,7 +330,7 @@ def send_to_printer(text_data, status_widget, btn_widget=None, use_epam=True):
                 import subprocess
                 
                 temp_file = os.path.join(tempfile.gettempdir(), f"label_{clean_num}")
-                generate_label_image(clean_num, temp_file, use_epam=use_epam)
+                generate_label_image(clean_num, temp_file, use_epam=use_epam, print_barcode=print_barcode)
                 image_path = temp_file + ".png"
                 bin_path = temp_file + ".bin"
                 
@@ -742,7 +753,7 @@ def on_free_print(event=None):
             clean_lines.append(line)
             
     if not clean_lines: return
-    send_to_printer(clean_lines, free_status, use_epam=False)
+    send_to_printer(clean_lines, free_status, use_epam=False, print_barcode=False)
 
 btn_free_print = ttk.Button(tab_free, text="Напечатать", command=on_free_print)
 btn_free_print.pack(pady=(5, 10), ipadx=10, ipady=5)
