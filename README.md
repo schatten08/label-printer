@@ -52,6 +52,11 @@ For macOS, the application dynamically generates barcode images and bypasses the
 5. Track your overall scanning progress in real-time (`Found: X / Y`).
 6. Once the audit is complete, click "Export to CSV" to generate a clean, Excel-ready report (UTF-8 encoded with semicolon delimiters) of your inventory statuses.
 
+### Tab 4: Direct Print (Произвольная печать)
+1. Paste or type any multiline text into the large text area.
+2. Click "Send to printer" — each line will be printed as a separate, individual label.
+3. In this mode, the hardware barcode and standard "EPAM " prefixes are completely bypassed. The text is perfectly centered across the entire width of the label.
+
 ### Launching on Windows
 1. Ensure the printer is connected, turned on, and has the correct label roll installed.
 2. Ensure your label template is saved as `Label.lbx` (created in P-touch Editor) in the project folder. The template must contain text/barcode objects named `Label` and `BarCode`.
