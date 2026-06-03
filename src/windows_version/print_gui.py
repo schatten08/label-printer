@@ -310,7 +310,11 @@ LANGS = {
         "c_mod": "Модель",
         "btn_upd": "🔄 Проверить обновление",
         "upd_ok": "✅ У вас последняя версия!",
-        "upd_err": "❌ Ошибка при проверке"
+        "upd_err": "❌ Ошибка при проверке",
+        "m_theme": "Тема",
+        "m_dark": "Темная",
+        "m_light": "Светлая",
+        "m_lang": "Язык"
     },
     "en": {
         "title": "Label Printing",
@@ -336,7 +340,11 @@ LANGS = {
         "found_stat": "Found:",
         "btn_upd": "🔄 Check for Updates",
         "upd_ok": "✅ You have the latest version!",
-        "upd_err": "❌ Update check failed"
+        "upd_err": "❌ Update check failed",
+        "m_theme": "Theme",
+        "m_dark": "Dark",
+        "m_light": "Light",
+        "m_lang": "Language"
     }
 }
 def get_lang():
@@ -419,6 +427,14 @@ def update_texts(lang):
         update_btn.config(text=l.get("btn_upd", "🔄 Check for Updates"))
     except NameError:
         pass
+
+    # Обновляем названия меню
+    try:
+        menubar.entryconfig(1, label=l.get("m_theme", "Theme"))
+        menubar.entryconfig(2, label=l.get("m_lang", "Language"))
+        theme_menu.entryconfig(0, label=l.get("m_dark", "Dark"))
+        theme_menu.entryconfig(1, label=l.get("m_light", "Light"))
+    except: pass
         
     # Update inventory contents on lang switch
     if 'inv_tree' in globals() and 'inv_data' in globals():
