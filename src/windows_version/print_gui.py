@@ -374,8 +374,22 @@ def check_for_updates():
         def run_git():
             try:
                 import subprocess
-                # Пытаемся сделать git pull с явным указанием origin main на случай, если ветка не отслеживается
-                process = subprocess.Popen(["git", "pull", "origin", "main"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+                import os
+                
+                # Получаем путь к директории скрипта
+                script_dir = os.path.dirname(os.path.abspath(__file__))
+                # Проект находится на уровень выше папки windows_version
+                project_root = os.path.abspath(os.path.join(script_dir, "../../"))
+
+                # Пытаемся сделать git pull с явным указанием URL, чтобы не зависеть от имени remote (origin)
+                process = subprocess.Popen(
+                    ["git", "pull", "https://github.com/schatten08/label-printer.git", "main"], 
+                    stdout=subprocess.PIPE, 
+                    stderr=subprocess.PIPE, 
+                    text=True, 
+                    cwd=project_root,
+                    creationflags=subprocess.CREATE_NO_WINDOW
+                )
                 stdout, stderr = process.communicate(timeout=30)
                 
                 if "Already up to date" in stdout or "Уже обновлено" in stdout:
