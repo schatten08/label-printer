@@ -374,8 +374,8 @@ def check_for_updates():
         def run_git():
             try:
                 import subprocess
-                # Пытаемся получить изменения
-                process = subprocess.Popen(["git", "pull"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+                # Пытаемся сделать git pull с явным указанием origin main на случай, если ветка не отслеживается
+                process = subprocess.Popen(["git", "pull", "origin", "main"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
                 stdout, stderr = process.communicate(timeout=30)
                 
                 if "Already up to date" in stdout or "Уже обновлено" in stdout:
