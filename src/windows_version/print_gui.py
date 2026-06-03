@@ -307,7 +307,10 @@ LANGS = {
         "btn_ex": "💾 Экспорт отчета в CSV",
         "c_stat": "Статус",
         "c_lbl": "Label (Инвентарный №)",
-        "c_mod": "Модель"
+        "c_mod": "Модель",
+        "btn_upd": "🔄 Проверить обновление",
+        "upd_ok": "✅ У вас последняя версия!",
+        "upd_err": "❌ Ошибка при проверке"
     },
     "en": {
         "title": "Label Printing",
@@ -330,7 +333,10 @@ LANGS = {
         "s_pend": "? Pending",
         "s_found": "? Found",
         "s_stats": "Found:",
-        "found_stat": "Found:"
+        "found_stat": "Found:",
+        "btn_upd": "🔄 Check for Updates",
+        "upd_ok": "✅ You have the latest version!",
+        "upd_err": "❌ Update check failed"
     }
 }
 def get_lang():
@@ -350,6 +356,35 @@ def save_lang(lang_code):
         with open(CONFIG_FILE, "w", encoding="utf-8") as f: json.dump(data, f)
     except: pass
     update_texts(lang_code)
+
+def check_for_updates():
+    """ Пытается сделать git pull и сообщает результат """
+    try:
+        l = LANGS.get(current_lang, LANGS["ru"])
+        update_btn.config(state="disabled")
+        
+        def run_git():
+            try:
+                import subprocess
+                # Пытаемся получить изменения
+                process = subprocess.Popen(["git", "pull"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+                stdout, stderr = process.communicate(timeout=30)
+                
+                if "Already up to date" in stdout or "Уже обновлено" in stdout:
+                    window.after(0, lambda: messagebox.showinfo("Update", l.get("upd_ok", "✅ Latest version!")))
+                elif "Updating" in stdout or "Изменения:" in stdout or "Fast-forward" in stdout:
+                    window.after(0, lambda: messagebox.showinfo("Update", "✅ Обновление загружено! Перезапустите программу.\nChanges downloaded! Please restart."))
+                else:
+                    window.after(0, lambda: messagebox.showwarning("Update", f"{l.get('upd_err', 'Error')}\n{stderr}"))
+            except Exception as ex:
+                window.after(0, lambda: messagebox.showerror("Update", f"Git error: {str(ex)}\nУбедитесь, что Git установлен."))
+            finally:
+                window.after(0, lambda: update_btn.config(state="normal"))
+
+        threading.Thread(target=run_git, daemon=True).start()
+    except Exception as e:
+        messagebox.showerror("Error", str(e))
+        update_btn.config(state="normal")
 
 def update_texts(lang):
     global current_lang
@@ -377,6 +412,12 @@ def update_texts(lang):
         desc_free.config(text=l.get("d_free", "Text (Inventory ID, custom name, etc):"))
         btn_free_print.config(text=l.get("btn_f", "Print Single Label"))
     except Exception:
+        pass
+
+    # Обновляем кнопку обновления
+    try:
+        update_btn.config(text=l.get("btn_upd", "🔄 Check for Updates"))
+    except NameError:
         pass
         
     # Update inventory contents on lang switch
@@ -465,6 +506,9 @@ apply_theme(current_theme) # Инициализация сохраненной �
 
 header = ttk.Label(window, text="🖨️ Печать этикеток", font=("Segoe UI", 16, "bold"))
 header.pack(pady=(10, 0))
+
+update_btn = ttk.Button(window, text="🔄 Проверить обновление", command=check_for_updates)
+update_btn.pack(pady=(5, 5))
 
 # Блок выбора принтера (Выпадающий список)
 printers_list = get_windows_printers()
