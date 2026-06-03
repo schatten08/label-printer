@@ -165,7 +165,7 @@ def check_for_updates():
                 
                 # Пытаемся сделать git pull с явным указанием пути к репозиторию
                 process = subprocess.Popen(
-                    ["git", "pull", "https://github.com/schatten08/label-printer.git", "main"], 
+                    ["git", "pull", "--no-rebase", "https://github.com/schatten08/label-printer.git", "main"], 
                     stdout=subprocess.PIPE, 
                     stderr=subprocess.PIPE, 
                     text=True,
