@@ -54,8 +54,11 @@ For macOS, the application dynamically generates barcode images and bypasses the
 
 ### Tab 4: Direct Print (Произвольная печать)
 1. Paste or type any multiline text into the large text area.
-2. Click "Send to printer" — each line will be printed as a separate, individual label.
+2. Click "Print" — each line will be printed as a separate, individual label.
 3. In this mode, the hardware barcode and standard "EPAM " prefixes are completely bypassed. The text is perfectly centered across the entire width of the label.
+
+### Updates & Maintenance
+The application includes a **"Check for Updates"** button. Clicking this will automatically perform a `git pull` from the main repository, ensuring you always have the latest features, translations, and label templates. If updates are found, restart the application to apply them.
 
 ### Launching on Windows
 1. Ensure the printer is connected, turned on, and has the correct label roll installed.
