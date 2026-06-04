@@ -58,7 +58,11 @@ For macOS, the application dynamically generates barcode images and bypasses the
 3. In this mode, the hardware barcode and standard "EPAM " prefixes are completely bypassed. The text is perfectly centered across the entire width of the label.
 
 ### Updates & Maintenance
-The application includes a **"Check for Updates"** button. Clicking this will automatically perform a `git pull` from the main repository, ensuring you always have the latest features, translations, and label templates. If updates are found, restart the application to apply them.
+The application includes a **"Check for Updates"** button.
+- **If Git is installed**: It automatically performs a `git pull`, ensuring you always have the latest features and fixes.
+- **If Git is NOT installed**: It uses the GitHub API to check for updates. If a new version is found, it will offer to open the download page in your browser.
+- **Network Drives Support**: The program automatically handles Git's "dubious ownership" errors, making it safe to run from network shares.
+- **ZIP Downloads**: If you downloaded the project as a ZIP archive, you can now enable full auto-updates with one click (the app will offer to initialize a Git repository for you).
 
 ### Launching on Windows
 1. Ensure the printer is connected, turned on, and has the correct label roll installed.
