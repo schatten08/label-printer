@@ -9,6 +9,11 @@ import ctypes
 import sys
 import json
 from datetime import datetime
+import urllib.request
+import webbrowser
+
+# Текущая версия программы (дата последнего коммита)
+APP_VERSION = "2024-06-04 15:00"
 
 # --- Проверка на повторный запуск (Только для Windows) ---
 mutex_name = "BrotherLabelPrinter_SingleInstanceMutex"
@@ -312,9 +317,11 @@ LANGS = {
         "upd_ok": "✅ У вас последняя версия!",
         "upd_err": "❌ Ошибка при проверке",
         "upd_no_git": "❌ Git не найден! Установите его с git-scm.com",
+        "upd_no_git_ask": "Git не установлен. Проверить новую версию в браузере?",
         "upd_not_repo": "❌ Программа скачана как архив. Авто-обновление невозможно.",
         "upd_not_repo_ask": "Папка не является Git-репозиторием. Хотите включить автоматические обновления?\n(Это создаст .git папку и синхронизирует код с GitHub)",
         "upd_init_ok": "✅ Теперь обновления включены! Нажмите кнопку еще раз.",
+        "upd_new_zip": "🚀 Найдена новая версия! Открыть страницу загрузки?",
         "m_theme": "Тема",
         "m_dark": "Темная",
         "m_light": "Светлая",
@@ -346,9 +353,11 @@ LANGS = {
         "upd_ok": "✅ You have the latest version!",
         "upd_err": "❌ Update check failed",
         "upd_no_git": "❌ Git not found! Please install it.",
+        "upd_no_git_ask": "Git not found. Check for updates in browser?",
         "upd_not_repo": "❌ Downloaded as ZIP. Auto-update disabled.",
         "upd_not_repo_ask": "Folder is not a Git repo. Would you like to enable auto-updates?\n(This will sync your code with GitHub)",
         "upd_init_ok": "✅ Updates enabled! Click the button again.",
+        "upd_new_zip": "🚀 New version found! Open download page?",
         "m_theme": "Theme",
         "m_dark": "Dark",
         "m_light": "Light",
@@ -392,7 +401,21 @@ def check_for_updates():
 
                 # 1. Проверяем наличие Git
                 if not shutil.which("git"):
-                    window.after(0, lambda: messagebox.showerror("Update", l.get("upd_no_git", "❌ Git not found!")))
+                    if messagebox.askyesno("Update", l.get("upd_no_git_ask", "Git not found. Open browser?")):
+                        # Пытаемся проверить дату последнего коммита через API (без Git)
+                        try:
+                            api_url = "https://api.github.com/repos/schatten08/label-printer/commits/main"
+                            req = urllib.request.Request(api_url, headers={'User-Agent': 'Mozilla/5.0'})
+                            with urllib.request.urlopen(req, timeout=5) as response:
+                                data = json.loads(response.read().decode())
+                                last_commit_date = data['commit']['author']['date'] # 2024-06-04T...
+                                if last_commit_date > APP_VERSION:
+                                    if messagebox.askyesno("Update", l.get("upd_new_zip", "New version!")):
+                                        webbrowser.open("https://github.com/schatten08/label-printer")
+                                else:
+                                    window.after(0, lambda: messagebox.showinfo("Update", l.get("upd_ok", "✅ Latest!")))
+                        except:
+                            webbrowser.open("https://github.com/schatten08/label-printer")
                     return
 
                 # 2. Проверяем, что это git репозиторий
