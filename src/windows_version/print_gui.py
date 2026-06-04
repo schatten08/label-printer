@@ -674,6 +674,57 @@ inv_tree.column("sn", width=150)
 inv_tree.column("rest", width=220)
 inv_tree.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
 
+# Состояние сортировки: {column: reverse}
+inv_sort_state = {}
+
+def sort_inventory_column(col):
+    """Сортировка таблицы инвентаризации по выбранной колонке"""
+    # Переключаем направление сортировки
+    reverse = not inv_sort_state.get(col, False)
+    inv_sort_state[col] = reverse
+
+    # Получаем все данные из таблицы
+    data_list = []
+    for item_id in inv_tree.get_children():
+        values = inv_tree.item(item_id)['values']
+        tags = inv_tree.item(item_id)['tags']
+        data_list.append((values, tags, item_id))
+
+    # Индекс колонки для сортировки
+    col_index = {"status": 0, "sn": 1, "rest": 2}[col]
+
+    # Сортируем данные
+    data_list.sort(key=lambda x: str(x[0][col_index]).lower(), reverse=reverse)
+
+    # Удаляем все элементы из таблицы
+    for item_id in inv_tree.get_children():
+        inv_tree.delete(item_id)
+
+    # Вставляем отсортированные данные обратно
+    for values, tags, old_item_id in data_list:
+        new_item_id = inv_tree.insert("", tk.END, values=values, tags=tags)
+
+        # Находим соответствующий элемент в inv_data по старому item_id и обновляем
+        for sn_key, data in inv_data.items():
+            if data["item_id"] == old_item_id:
+                data["item_id"] = new_item_id
+                inv_items_map[sn_key] = new_item_id
+                break
+
+    # Обновляем заголовки с индикаторами сортировки
+    for column in columns:
+        text = inv_tree.heading(column)['text']
+        # Убираем старые индикаторы
+        text = text.replace(' ▲', '').replace(' ▼', '')
+        if column == col:
+            text += ' ▼' if reverse else ' ▲'
+        inv_tree.heading(column, text=text)
+
+# Привязываем сортировку к кликам на заголовки
+inv_tree.heading("status", command=lambda: sort_inventory_column("status"))
+inv_tree.heading("sn", command=lambda: sort_inventory_column("sn"))
+inv_tree.heading("rest", command=lambda: sort_inventory_column("rest"))
+
 # Тег для подсветки найденных строк (светло-зеленый)
 inv_tree.tag_configure('found', background='#abf7b1', foreground='black')
 
