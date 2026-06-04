@@ -381,6 +381,12 @@ def check_for_updates():
                 # Проект находится на уровень выше папки windows_version
                 project_root = os.path.abspath(os.path.join(script_dir, "../../"))
 
+                # Устраняем ошибку "dubious ownership" (для сетевых папок или других юзеров)
+                subprocess.run(
+                    ["git", "config", "--global", "--add", "safe.directory", project_root.replace("\\", "/")],
+                    creationflags=subprocess.CREATE_NO_WINDOW
+                )
+
                 # Пытаемся сделать git pull с явным указанием URL, чтобы не зависеть от имени remote (origin)
                 process = subprocess.Popen(
                     ["git", "pull", "--no-rebase", "https://github.com/schatten08/label-printer.git", "main"], 

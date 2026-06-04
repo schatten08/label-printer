@@ -163,6 +163,9 @@ def check_for_updates():
                 # Проект находится на уровень выше папки mac_version
                 project_root = os.path.abspath(os.path.join(script_dir, "../../"))
                 
+                # Устраняем ошибку "dubious ownership" (для сетевых папок или разных прав)
+                subprocess.run(["git", "config", "--global", "--add", "safe.directory", project_root])
+                
                 # Пытаемся сделать git pull с явным указанием пути к репозиторию
                 process = subprocess.Popen(
                     ["git", "pull", "--no-rebase", "https://github.com/schatten08/label-printer.git", "main"], 
