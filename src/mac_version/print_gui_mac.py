@@ -45,7 +45,14 @@ LANGS = {
         "s_pend": "❌ Ожидает",
         "s_found": "✅ Найдено",
         "s_stats": "Найдено:",
-        "found_stat": "Найдено:"
+        "found_stat": "Найдено:",
+        "btn_upd": "🔄 Проверить обновление",
+        "upd_ok": "✅ У вас последняя версия!",
+        "upd_err": "❌ Ошибка при проверке",
+        "upd_no_git": "❌ Git не найден! Установите его с git-scm.com",
+        "upd_not_repo": "❌ Программа скачана как архив. Авто-обновление невозможно.",
+        "upd_not_repo_ask": "Папка не является Git-репозиторием. Хотите включить автоматические обновления?\n(Это создаст .git папку и синхронизирует код с GitHub)",
+        "upd_init_ok": "✅ Теперь обновления включены! Нажмите кнопку еще раз."
     },
     "en": {
         "title": "Label Printing",
@@ -67,7 +74,14 @@ LANGS = {
         "c_mod": "Model",
         "s_pend": "❌ Pending",
         "s_found": "✅ Found",
-        "s_stats": "Found:"
+        "s_stats": "Found:",
+        "btn_upd": "🔄 Check for Updates",
+        "upd_ok": "✅ You have the latest version!",
+        "upd_err": "❌ Update check failed",
+        "upd_no_git": "❌ Git not found! Please install it.",
+        "upd_not_repo": "❌ Downloaded as ZIP. Auto-update disabled.",
+        "upd_not_repo_ask": "Folder is not a Git repo. Would you like to enable auto-updates?\n(This will sync your code with GitHub)",
+        "upd_init_ok": "✅ Updates enabled! Click the button again."
     }
 }
 
@@ -157,12 +171,29 @@ def check_for_updates():
             try:
                 import subprocess
                 import os
+                import shutil
                 
                 # Получаем путь к директории скрипта
                 script_dir = os.path.dirname(os.path.abspath(__file__))
                 # Проект находится на уровень выше папки mac_version
                 project_root = os.path.abspath(os.path.join(script_dir, "../../"))
                 
+                # 1. Проверяем наличие Git
+                if not shutil.which("git"):
+                    window.after(0, lambda: messagebox.showerror("Update", l.get("upd_no_git", "❌ Git not found!")))
+                    return
+
+                # 2. Проверяем, что это git репозиторий
+                if not os.path.exists(os.path.join(project_root, ".git")):
+                    # Спросим пользователя, хочет ли он включить обновления
+                    if messagebox.askyesno("Update", l.get("upd_not_repo_ask", "Enable updates?")):
+                        subprocess.run(["git", "init"], cwd=project_root)
+                        subprocess.run(["git", "remote", "add", "origin", "https://github.com/schatten08/label-printer.git"], cwd=project_root)
+                        subprocess.run(["git", "fetch", "--all"], cwd=project_root)
+                        subprocess.run(["git", "reset", "--hard", "origin/main"], cwd=project_root)
+                        window.after(0, lambda: messagebox.showinfo("Update", l.get("upd_init_ok", "✅ Done!")))
+                    return
+
                 # Устраняем ошибку "dubious ownership" (для сетевых папок или разных прав)
                 subprocess.run(["git", "config", "--global", "--add", "safe.directory", project_root])
                 
