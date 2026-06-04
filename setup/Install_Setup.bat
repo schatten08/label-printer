@@ -55,11 +55,11 @@ if exist "C:\Program Files\Brother bPAC SDK" (
 :: 5. Создание ярлыка (вызов PowerShell для создания .lnk)
 echo.
 echo [BONUS] Creating Desktop Shortcut...
-set "SCRIPT_PATH=%~dp0src\windows_version\print_gui.py"
+set "SCRIPT_PATH=%~dp0..\src\windows_version\print_gui.py"
 set "SHORTCUT_PATH=%USERPROFILE%\Desktop\Label Printer.lnk"
-set "ICON_PATH=%~dp0src\windows_version\Label.lbx"
+set "WORKING_DIR=%~dp0..\src\windows_version"
 
-powershell -Command "$s=(New-Object -COM WScript.Shell).CreateShortcut('%SHORTCUT_PATH%');$s.TargetPath='pythonw.exe';$s.Arguments='\"%SCRIPT_PATH%\"';$s.WorkingDirectory='%~dp0src\windows_version';$s.IconLocation='shell32.dll,196';$s.Save()"
+powershell -Command "$s=(New-Object -COM WScript.Shell).CreateShortcut('%SHORTCUT_PATH%');$s.TargetPath='pythonw.exe';$s.Arguments='\"%SCRIPT_PATH%\"';$s.WorkingDirectory='%WORKING_DIR%';$s.IconLocation='shell32.dll,196';$s.Save()"
 
 echo [OK] Shortcut 'Label Printer' created on your Desktop.
 

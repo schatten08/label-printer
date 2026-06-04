@@ -24,7 +24,7 @@ echo
 
 # 2. Создание иконки запуска на Рабочем столе через AppleScript
 echo "[2/2] Создание ярлыка на Рабочем столе..."
-APP_PATH="$(pwd)/src/mac_version/print_gui_mac.py"
+APP_PATH="$(pwd)/../src/mac_version/print_gui_mac.py"
 OSASCRIPT_CMD="tell application \"Finder\"
     set desk to insertion point as text
     make new alias file at desktop to posix file \"$APP_PATH\"
