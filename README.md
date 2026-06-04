@@ -1,13 +1,56 @@
-# Brother Label Printer
+# 🖨️ Brother Label Printer
 
-A GUI utility for batch printing labels on Brother printers (specifically QL-810W) using the Brother bPAC3 SDK.
+Утилита для быстрой печати наклеек на принтерах Brother (через штрихкод или текстом). Работает на Windows и macOS.
 
-## Description
-This program allows you to quickly print a series of labels. It features a tabbed interface with two distinct modes:
-1. **Batch Printing Mode**: Paste a list of asset numbers separated by spaces, commas, or new lines (ideal for copying directly from ServiceNow HAM or Excel) to print them all at once.
-2. **Scanner Dictionary Mode**: Paste a two-column mapping of Serial Numbers (SN) to Labels. Connect a barcode scanner, scan the SN on a physical box, and the program will automatically find and print the corresponding Label in real-time with audio feedback.
+---
 
-The application automatically scans for installed printers and populates a dropdown menu, defaulting to the Brother printer. The input is automatically sanitized from unwanted special characters before printing. The graphical interface is written in Python (Tkinter). For Windows, the application uses `pywin32` to connect natively to the official Brother bPAC3 COM objects without any external scripts. For macOS, it uses dynamic barcode image generation and the `brother_ql` print engine.
+## 🚀 БЫСТРЫЙ СТАРТ (Для Windows)
+
+### 🧩 Шаг 1: Установка необходимых компонентов
+Если вы устанавливаете программу впервые, вам нужно поставить **Python** и **Драйвер Brother**:
+
+1.  **Установите Python**: [Скачать Python 3.12](https://www.python.org/downloads/windows/) (обязательно поставьте галочку **"Add Python to PATH"** при установке!).
+2.  **Установите SDK Brother**: [Скачать bPAC SDK](https://support.brother.com/g/s/es/dev/en/bpac/index.html) (выберите Windows 32/64 bit). Без него программа не увидит принтер.
+3.  **Настройте зависимости**: Откройте PowerShell или Командную строку и введите:
+    `pip install pywin32`
+
+### 🏃 Шаг 2: Запуск программы
+В папке с программой найдите файл:
+- **`Start Windows Version.bat`** — просто дважды кликните по нему.
+
+---
+
+## 🍏 БЫСТРЫЙ СТАРТ (Для macOS)
+
+### 🧩 Шаг 1: Подготовка
+1.  **Установите библиотеки**: Откройте Терминал и выполните команду:
+    `pip3 install brother_ql Pillow python-barcode`
+2.  **Принтер**: Убедитесь, что принтер добавлен в настройках macOS ("Принтеры и сканеры").
+
+### 🏃 Шаг 2: Запуск
+1.  Перейдите в папку `src/mac_version`.
+2.  Запустите командой: `python3 print_gui_mac.py`
+
+---
+
+## 🛠️ Основные режимы работы (Вкладки)
+
+1.  **📝 Список**: Вставьте список номеров (из Excel или письма) → Нажмите "Печать". Каждый номер — отдельная наклейка со штрихкодом.
+2.  **🔍 Сканер**: Вставьте список "Серийник — Инвентарник" → Сканируйте коробку → Принтер сам печатает нужную наклейку.
+3.  **📋 Инвентаризация**: Загрузите базу → Сканируйте всё подряд → Программа отметит найденное и выгрузит отчет.
+4.  **abc Произвольная печать**: Напишите любой текст → Нажмите "Печать". Печать без лишних слов и штрихкодов, текст по центру.
+
+---
+
+## 🔄 Как обновлять программу
+Внутри программы есть кнопка **"🔄 Check for Updates"**:
+- Если у вас стоит Git — программа обновится сама.
+- Если Git нет — программа предложит скачать новую версию в браузере.
+
+---
+
+## 📋 Технические подробности (Для разработчиков)
+*(Далее следует старая версия README с деталями...)*
 
 ## Requirements
 - OS: **Windows** (Primary version via bPAC SDK) or **macOS** (Alternative version via CUPS & brother_ql).
