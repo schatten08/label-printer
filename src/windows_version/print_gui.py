@@ -325,7 +325,26 @@ LANGS = {
         "m_theme": "Тема",
         "m_dark": "Темная",
         "m_light": "Светлая",
-        "m_lang": "Язык"
+        "m_lang": "Язык",
+        "m_help": "Справка",
+        "h_title": "Как пользоваться программой",
+        "h_text": """
+1. Список (Batch):
+   - Вставьте список номеров через пробел или Enter.
+   - Нажмите 'Печать'. Каждый номер будет на отдельной наклейке.
+
+2. Сканер коробок:
+   - Вставьте таблицу из Excel (2 колонки: SN и Label).
+   - Сканируйте серийник с коробки. Программа сама найдет Label и напечатает.
+
+3. Инвентаризация:
+   - Загрузите базу оборудования.
+   - Сканируйте всё подряд. Программа отметит найденное зеленым цветом.
+   - Нажмите 'Экспорт', чтобы сохранить результат в файл.
+
+4. Произвольная печать:
+   - Напишите любой текст. Программа напечатает его по центру без штрихкода.
+        """
     },
     "en": {
         "title": "Label Printing",
@@ -361,7 +380,26 @@ LANGS = {
         "m_theme": "Theme",
         "m_dark": "Dark",
         "m_light": "Light",
-        "m_lang": "Language"
+        "m_lang": "Language",
+        "m_help": "Help",
+        "h_title": "How to use the program",
+        "h_text": """
+1. List (Batch):
+   - Paste a list of numbers (space or Enter separated).
+   - Click 'Print'. Each number will be a separate label.
+
+2. Box Scanner:
+   - Paste an Excel table (2 columns: SN and Label).
+   - Scan the Serial Number from the box. The app finds the Label and prints it.
+
+3. Inventory Audit:
+   - Load your device database.
+   - Scan items. The app marks them green when found.
+   - Click 'Export' to save the result to a CSV file.
+
+4. Direct Print:
+   - Type any text. The app prints it centered without a barcode.
+        """
     }
 }
 def get_lang():
@@ -381,6 +419,27 @@ def save_lang(lang_code):
         with open(CONFIG_FILE, "w", encoding="utf-8") as f: json.dump(data, f)
     except: pass
     update_texts(lang_code)
+
+def show_help():
+    l = LANGS.get(current_lang, LANGS["ru"])
+    help_win = tk.Toplevel(window)
+    help_win.title(l.get("m_help", "Help"))
+    help_win.geometry("500x450")
+    help_win.transient(window)
+    
+    # Применяем текущую тему к фону
+    bg = "#f3f3f3" if current_theme == "light" else "#252526"
+    fg = "#333333" if current_theme == "light" else "#cccccc"
+    help_win.configure(bg=bg)
+    
+    tk.Label(help_win, text=l.get("h_title", "Help"), font=("Segoe UI", 14, "bold"), bg=bg, fg=fg).pack(pady=10)
+    
+    txt = tk.Text(help_win, wrap="word", font=("Segoe UI", 10), bg=bg, fg=fg, bd=0, padx=20, pady=10)
+    txt.insert("1.0", l.get("h_text", ""))
+    txt.config(state="disabled")
+    txt.pack(expand=True, fill="both")
+    
+    ttk.Button(help_win, text="OK", command=help_win.destroy).pack(pady=10)
 
 def check_for_updates():
     """ Пытается сделать git pull и сообщает результат """
@@ -500,6 +559,7 @@ def update_texts(lang):
     try:
         menubar.entryconfig(1, label=l.get("m_theme", "Theme"))
         menubar.entryconfig(2, label=l.get("m_lang", "Language"))
+        menubar.entryconfig(3, label=l.get("m_help", "Help"))
         theme_menu.entryconfig(0, label=l.get("m_dark", "Dark"))
         theme_menu.entryconfig(1, label=l.get("m_light", "Light"))
     except: pass
@@ -582,6 +642,8 @@ lang_menu = tk.Menu(menubar, tearoff=0)
 lang_menu.add_command(label="🇷🇺 Русский", command=lambda: save_lang("ru"))
 lang_menu.add_command(label="🇬🇧 English", command=lambda: save_lang("en"))
 menubar.add_cascade(label="Язык", menu=lang_menu)
+
+menubar.add_command(label="Справка", command=show_help)
 
 window.config(menu=menubar)
 

@@ -171,6 +171,33 @@ def save_lang(lang_code):
     except: pass
     update_texts(lang_code)
 
+def show_help():
+    l = LANGS.get(current_lang, LANGS["ru"])
+    help_win = tk.Toplevel(window)
+    help_win.title(l.get("m_help", "Help"))
+    help_win.geometry("500x450")
+    help_win.transient(window)
+    
+    # Применяем текущую тему к фону
+    bg = "#f3f3f3" if current_theme == "light" else "#252526"
+    fg = "#333333" if current_theme == "light" else "#cccccc"
+    if current_theme == "system":
+        # На Mac system оставляем дефолт
+        pass
+    else:
+        help_win.configure(bg=bg)
+    
+    tk.Label(help_win, text=l.get("h_title", "Help"), font=("Helvetica", 14, "bold")).pack(pady=10)
+    
+    txt = tk.Text(help_win, wrap="word", font=("Helvetica", 12), bd=0, padx=20, pady=10)
+    if current_theme != "system":
+        txt.configure(bg=bg, fg=fg)
+    txt.insert("1.0", l.get("h_text", ""))
+    txt.config(state="disabled")
+    txt.pack(expand=True, fill="both")
+    
+    ttk.Button(help_win, text="OK", command=help_win.destroy).pack(pady=10)
+
 def check_for_updates():
     """ Пытается сделать git pull и сообщает результат """
     try:
@@ -285,6 +312,7 @@ def update_texts(lang):
     try:
         menubar.entryconfig(1, label=l.get("m_theme", "Theme"))
         menubar.entryconfig(2, label=l.get("m_lang", "Language"))
+        menubar.entryconfig(3, label=l.get("m_help", "Help"))
         theme_menu.entryconfig(0, label=l.get("m_dark", "Dark"))
         theme_menu.entryconfig(1, label=l.get("m_light", "Light"))
     except: pass
@@ -636,6 +664,8 @@ lang_menu = tk.Menu(menubar, tearoff=0)
 lang_menu.add_command(label="🇷🇺 Русский", command=lambda: save_lang("ru"))
 lang_menu.add_command(label="🇬🇧 English", command=lambda: save_lang("en"))
 menubar.add_cascade(label="Язык", menu=lang_menu)
+
+menubar.add_command(label="Справка", command=show_help)
 window.config(menu=menubar)
 
 header = ttk.Label(window, text="🍏 Печать этикеток (Mac)", font=("Helvetica", 16, "bold"))
