@@ -239,6 +239,11 @@ def on_scan(event):
         label = re.sub(r'[^\w\s\-,;]', '', label)
         # Звук успешного сканирования (высокий и короткий "Пик")
         threading.Thread(target=lambda: winsound.Beep(2000, 150), daemon=True).start()
+        
+        # Обновляем статистику для вкладки сканера
+        scanned_in_scanner_tab.add(sn)
+        update_scan_stats()
+        
         send_to_printer([label], scan_status)
     else:
         # Звук ошибки (низкий и длинный "Бууп")
@@ -712,6 +717,7 @@ notebook.add(tab_scan, text=" 🔍 Сканер коробок / оборудо�
 def auto_focus_scanner(event=None):
     # Автоматически переводим фокус на строку сканирования (с задержкой, чтобы вставка сработала)
     window.after(100, lambda: scan_entry.focus())
+    window.after(200, update_scan_stats)
 
 desc_dict = ttk.Label(tab_scan, text="1. Вставьте 2 колонки из Excel (SN и Label):", justify="center")
 desc_dict.pack(pady=(10, 2))
@@ -727,6 +733,13 @@ desc_scan.pack(pady=(10, 2))
 scan_entry = ttk.Entry(tab_scan, font=("Consolas", 14), width=35)
 scan_entry.pack(pady=5)
 scan_entry.bind("<Return>", on_scan)
+
+# Фрейм прогресса для сканера
+scan_progress_frame = ttk.Frame(tab_scan)
+scan_progress_bar = ttk.Progressbar(scan_progress_frame, orient=tk.HORIZONTAL, length=100, mode='determinate')
+scan_progress_bar.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 10))
+scan_progress_lbl = ttk.Label(scan_progress_frame, textvariable=scan_stats_var, font=("Segoe UI", 10, "bold"))
+scan_progress_lbl.pack(side=tk.RIGHT)
 
 scan_status = ttk.Label(tab_scan, text="", font=("Segoe UI", 10))
 scan_status.pack(pady=5)
