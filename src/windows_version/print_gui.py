@@ -85,6 +85,11 @@ def send_to_printer(text, status_widget, btn_widget=None, use_epam=True, print_b
             if not numbers:
                 return
 
+            total_count = len(numbers)
+            window.after(0, lambda: progress_frame.pack(fill=tk.X, padx=20, pady=(0, 10)))
+            window.after(0, lambda: progress_bar.configure(maximum=total_count, value=0))
+            window.after(0, lambda: progress_lbl.config(text=f"0 / {total_count}"))
+
             doc = win32com.client.Dispatch("bpac.Document")
             
             # Предварительная проверка включен ли принтер
@@ -93,6 +98,7 @@ def send_to_printer(text, status_widget, btn_widget=None, use_epam=True, print_b
                 if not printer_checker.IsPrinterOnline(selected_printer):
                     window.after(0, lambda: messagebox.showwarning("Принтер недоступен", f"Принтер '{selected_printer}' выключен или не подключен.\n\nПожалуйста, включите устройство и проверьте USB/Wi-Fi соединение."))
                     window.after(0, lambda: status_widget.config(text="❌ Принтер Off-line", foreground="red"))
+                    window.after(0, lambda: progress_frame.pack_forget())
                     return
             except Exception as e:
                 print("Skipping online check:", e)
@@ -109,6 +115,7 @@ def send_to_printer(text, status_widget, btn_widget=None, use_epam=True, print_b
             if not doc.Open(template_path):
                 window.after(0, lambda: messagebox.showerror("Ошибка", f"Не удалось открыть файл шаблона:\n{template_path}"))
                 window.after(0, lambda: status_widget.config(text="❌ Ошибка шаблона", foreground="red"))
+                window.after(0, lambda: progress_frame.pack_forget())
                 return
 
             # Выставляем принтер
@@ -117,7 +124,7 @@ def send_to_printer(text, status_widget, btn_widget=None, use_epam=True, print_b
             # Открываем канал печати 1 раз (Пакетная печать быстрее)
             doc.StartPrint("Batch Labels", 0)
 
-            for num in numbers:
+            for i, num in enumerate(numbers, 1):
                 lbl = doc.GetObject("Label")
                 if lbl:
                     lbl.Text = num
@@ -135,6 +142,9 @@ def send_to_printer(text, status_widget, btn_widget=None, use_epam=True, print_b
                 # Закидываем в очередь печати 1 копию и переходим к следующему
                 doc.PrintOut(1, 0)
                 
+                window.after(0, lambda val=i: progress_bar.configure(value=val))
+                window.after(0, lambda val=i: progress_lbl.config(text=f"{val} / {total_count}"))
+                
             # Из-за особенностей библиотеки pywin32, некоторые функции без параметров могут возвращаться как переменные (свойства)
             if callable(doc.EndPrint): doc.EndPrint()
             else: _ = doc.EndPrint
@@ -143,10 +153,12 @@ def send_to_printer(text, status_widget, btn_widget=None, use_epam=True, print_b
             else: _ = doc.Close
 
             window.after(0, lambda: status_widget.config(text=f"✅ Напечатано: {len(numbers)} шт.", foreground="green"))
+            window.after(2000, lambda: progress_frame.pack_forget())
             
         except Exception as e:
             window.after(0, lambda err=e: messagebox.showerror("Системная ошибка", f"Ошибка COM-объекта bPAC:\n{err}"))
             window.after(0, lambda err=e: status_widget.config(text=f"❌ Ошибка", foreground="red"))
+            window.after(0, lambda: progress_frame.pack_forget())
         finally:
             try:
                 import pythoncom
@@ -667,6 +679,13 @@ printer_lbl.pack(side=tk.LEFT)
 printer_var = tk.StringVar(value=default_p)
 printer_cb = ttk.Combobox(printer_frame, textvariable=printer_var, values=printers_list, state="readonly")
 printer_cb.pack(side=tk.RIGHT, expand=True, fill=tk.X, padx=(10, 0))
+
+# Фрейм прогресса (скрыт по умолчанию)
+progress_frame = ttk.Frame(window)
+progress_bar = ttk.Progressbar(progress_frame, orient=tk.HORIZONTAL, length=100, mode='determinate')
+progress_bar.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(20, 10))
+progress_lbl = ttk.Label(progress_frame, text="0 / 0", font=("Segoe UI", 9, "bold"))
+progress_lbl.pack(side=tk.RIGHT, padx=(0, 20))
 
 notebook = ttk.Notebook(window)
 notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)

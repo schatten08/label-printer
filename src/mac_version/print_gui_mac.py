@@ -463,8 +463,14 @@ def send_to_printer(text_data, status_widget, btn_widget=None, use_epam=True, pr
                 numbers = [str(n).strip() for n in text_data if str(n).strip()]
             else:
                 numbers = [n.strip() for n in re.split(r'[,;\s]+', str(text_data)) if n.strip()]
-                
-            for num in numbers:
+            
+            total_count = len(numbers)
+            if total_count > 1:
+                window.after(0, lambda: progress_frame.pack(fill=tk.X, padx=20, pady=(0, 10)))
+                window.after(0, lambda: progress_bar.configure(maximum=total_count, value=0))
+                window.after(0, lambda: progress_lbl.config(text=f"0 / {total_count}"))
+
+            for i, num in enumerate(numbers, 1):
                 clean_num = num.strip()
                 if not clean_num:
                     continue
@@ -498,6 +504,36 @@ def send_to_printer(text_data, status_widget, btn_widget=None, use_epam=True, pr
                     )
                     
                     with open(bin_path, 'wb') as f:
+                        f.write(instructions)
+                    
+                    # Отправляем RAW файл на принтер
+                    subprocess.run(["lp", "-d", selected_printer, "-o", "raw", bin_path], check=True)
+                    
+                    if total_count > 1:
+                        window.after(0, lambda val=i: progress_bar.configure(value=val))
+                        window.after(0, lambda val=i: progress_lbl.config(text=f"{val} / {total_count}"))
+
+                finally:
+                    # Cleanup
+                    try:
+                        if os.path.exists(image_path): os.remove(image_path)
+                        if os.path.exists(bin_path): os.remove(bin_path)
+                    except: pass
+
+            window.after(0, lambda: status_widget.config(text=f"✅ Напечатано: {len(numbers)} шт.", foreground="green"))
+            if total_count > 1:
+                window.after(2000, lambda: progress_frame.pack_forget())
+            
+        except Exception as e:
+            window.after(0, lambda err=e: messagebox.showerror("Ошибка печати", f"Ошибка: {err}"))
+            window.after(0, lambda: status_widget.config(text="❌ Ошибка", foreground="red"))
+            window.after(0, lambda: progress_frame.pack_forget())
+        finally:
+            if btn_widget:
+                window.after(0, lambda: btn_widget.config(state=tk.NORMAL))
+
+    import threading
+    threading.Thread(target=run_script, daemon=True).start()
                         f.write(instructions)
                         
                     # -o raw передает машинный код в принтер без изменений!
@@ -685,6 +721,13 @@ printer_lbl.pack(side=tk.LEFT)
 printer_var = tk.StringVar(value=default_p)
 printer_cb = ttk.Combobox(printer_frame, textvariable=printer_var, values=printers_list, state="readonly")
 printer_cb.pack(side=tk.RIGHT, expand=True, fill=tk.X, padx=(10, 0))
+
+# Фрейм прогресса (скрыт по умолчанию)
+progress_frame = ttk.Frame(window)
+progress_bar = ttk.Progressbar(progress_frame, orient=tk.HORIZONTAL, length=100, mode='determinate')
+progress_bar.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(20, 10))
+progress_lbl = ttk.Label(progress_frame, text="0 / 0", font=("Helvetica", 9, "bold"))
+progress_lbl.pack(side=tk.RIGHT, padx=(0, 20))
 
 notebook = ttk.Notebook(window)
 notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
