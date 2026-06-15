@@ -30,6 +30,10 @@ try:
 except Exception:
     pass
 
+# --- Глобальные переменные для прогресса сканера ---
+scanned_in_scanner_tab = set()
+scan_stats_var = None # Будет инициализирован после создания окна
+
 def get_windows_printers():
     try:
         import win32com.client
@@ -279,6 +283,9 @@ window.title("Печать этикеток Brother")
 window.geometry("540x570")
 window.minsize(540, 570)
 window.resizable(True, True)
+
+# Инициализируем переменные Tkinter после создания окна
+scan_stats_var = tk.StringVar(value="")
 
 CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
 
@@ -890,6 +897,29 @@ def update_inv_stats():
     total = len(inv_data)
     found = sum(1 for v in inv_data.values() if "Найдено" in v["status"])
     inv_stats_var.set(f"Найдено: {found} / {total}")
+
+# --- ФУНКЦИИ ПРОГРЕССА ДЛЯ СКАНЕРА ---
+def update_scan_stats():
+    raw_dict_text = dict_input.get("1.0", tk.END).strip()
+    if not raw_dict_text:
+        scan_progress_frame.pack_forget()
+        return
+
+    raw_dict = raw_dict_text.splitlines()
+    total = 0
+    for line in raw_dict:
+        if line.strip():
+            parts = re.split(r'[\t,; ]+', line.strip())
+            if len(parts) >= 2: total += 1
+            elif len(parts) == 1: total += 1 # Считаем как один элемент в словаре
+
+    if total > 0:
+        found = len(scanned_in_scanner_tab)
+        scan_stats_var.set(f"Прогресс: {found} / {total}")
+        scan_progress_bar.configure(maximum=total, value=found)
+        scan_progress_frame.pack(fill=tk.X, padx=40, pady=5)
+    else:
+        scan_progress_frame.pack_forget()
 
 def on_inv_scan(event):
     sn = inv_scan_entry.get().strip()
