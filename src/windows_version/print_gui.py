@@ -13,7 +13,7 @@ import urllib.request
 import webbrowser
 
 # Текущая версия программы (дата последнего коммита)
-APP_VERSION = "2026-06-15 15:15"
+APP_VERSION = "2026-06-17 11:30"
 
 # --- Проверка на повторный запуск (Только для Windows) ---
 mutex_name = "BrotherLabelPrinter_SingleInstanceMutex"
@@ -518,23 +518,22 @@ def check_for_updates():
                     creationflags=subprocess.CREATE_NO_WINDOW
                 )
 
-                # Пытаемся сделать git pull с явным указанием URL, чтобы не зависеть от имени remote (origin)
-                process = subprocess.Popen(
-                    ["git", "pull", "--no-rebase", "https://github.com/schatten08/label-printer.git", "main"], 
-                    stdout=subprocess.PIPE, 
-                    stderr=subprocess.PIPE, 
-                    text=True, 
-                    cwd=project_root,
-                    creationflags=subprocess.CREATE_NO_WINDOW
-                )
-                stdout, stderr = process.communicate(timeout=30)
+                # Безопасное обновление: Fetch + Reset (убивает конфликты в config.json и прочих)
+                subprocess.run(["git", "fetch", "--all"], cwd=project_root, creationflags=subprocess.CREATE_NO_WINDOW)
                 
-                if "Already up to date" in stdout or "Уже обновлено" in stdout:
+                # Запоминаем текущий хэш
+                old_hash = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=project_root, text=True).strip()
+                
+                # Сбрасываем к состоянию на сервере (это лечит любые ошибки с локальными файлами)
+                subprocess.run(["git", "reset", "--hard", "origin/main"], cwd=project_root, creationflags=subprocess.CREATE_NO_WINDOW)
+                
+                # Проверяем, изменился ли хэш
+                new_hash = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=project_root, text=True).strip()
+                
+                if old_hash == new_hash:
                     window.after(0, lambda: messagebox.showinfo("Update", l.get("upd_ok", "✅ Latest version!")))
-                elif "Updating" in stdout or "Изменения:" in stdout or "Fast-forward" in stdout:
-                    window.after(0, lambda: messagebox.showinfo("Update", "✅ Обновление загружено! Перезапустите программу.\nChanges downloaded! Please restart."))
                 else:
-                    window.after(0, lambda: messagebox.showwarning("Update", f"{l.get('upd_err', 'Error')}\n{stderr}"))
+                    window.after(0, lambda: messagebox.showinfo("Update", "✅ Обновление успешно! Перезапустите программу.\nChanges downloaded! Please restart."))
             except Exception as ex:
                 window.after(0, lambda: messagebox.showerror("Update", f"Git error: {str(ex)}\nУбедитесь, что Git установлен."))
             finally:

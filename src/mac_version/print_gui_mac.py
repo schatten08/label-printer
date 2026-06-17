@@ -11,7 +11,7 @@ import urllib.request
 import webbrowser
 
 # Текущая версия программы (дата последнего коммита)
-APP_VERSION = "2026-06-15 15:15"
+APP_VERSION = "2026-06-17 11:30"
 
 try:
     import warnings
@@ -248,26 +248,23 @@ def check_for_updates():
                 # Устраняем ошибку "dubious ownership" (для сетевых папок или разных прав)
                 subprocess.run(["git", "config", "--global", "--add", "safe.directory", project_root])
                 
-                # Принудительно сбрасываем локальные изменения перед пулом, если они есть
-                subprocess.run(["git", "reset", "--hard", "HEAD"], cwd=project_root)
+                # Безопасное обновление: Fetch + Reset (убивает любые конфликты в config.json)
+                subprocess.run(["git", "fetch", "--all"], cwd=project_root)
+                
+                # Запоминаем текущий хэш
+                old_hash = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=project_root, text=True).strip()
+                
+                # Сбрасываем к состоянию на сервере
+                subprocess.run(["git", "reset", "--hard", "origin/main"], cwd=project_root)
                 subprocess.run(["git", "clean", "-fd"], cwd=project_root)
                 
-                # Пытаемся сделать git pull с явным указанием пути к репозиторию
-                process = subprocess.Popen(
-                    ["git", "pull", "--no-rebase", "https://github.com/schatten08/label-printer.git", "main"], 
-                    stdout=subprocess.PIPE, 
-                    stderr=subprocess.PIPE, 
-                    text=True,
-                    cwd=project_root
-                )
-                stdout, stderr = process.communicate(timeout=30)
+                # Проверяем, изменился ли хэш
+                new_hash = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=project_root, text=True).strip()
                 
-                if "Already up to date" in stdout or "Уже обновлено" in stdout:
+                if old_hash == new_hash:
                     window.after(0, lambda: messagebox.showinfo("Update", l.get("upd_ok", "✅ Latest version!")))
-                elif "Updating" in stdout or "Изменения:" in stdout or "Fast-forward" in stdout:
-                    window.after(0, lambda: messagebox.showinfo("Update", "✅ Обновление загружено! Перезапустите программу.\nChanges downloaded! Please restart."))
                 else:
-                    window.after(0, lambda: messagebox.showwarning("Update", f"{l.get('upd_err', 'Error')}\n{stderr}"))
+                    window.after(0, lambda: messagebox.showinfo("Update", "✅ Обновление успешно! Перезапустите программу.\nChanges downloaded! Please restart."))
             except Exception as ex:
                 window.after(0, lambda: messagebox.showerror("Update", f"Git error: {str(ex)}\nУбедитесь, что Git установлен."))
             finally:
