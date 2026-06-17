@@ -250,6 +250,7 @@ def check_for_updates():
                 
                 # Принудительно сбрасываем локальные изменения перед пулом, если они есть
                 subprocess.run(["git", "reset", "--hard", "HEAD"], cwd=project_root)
+                subprocess.run(["git", "clean", "-fd"], cwd=project_root)
                 
                 # Пытаемся сделать git pull с явным указанием пути к репозиторию
                 process = subprocess.Popen(
