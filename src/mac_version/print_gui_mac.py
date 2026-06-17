@@ -538,65 +538,6 @@ def send_to_printer(text_data, status_widget, btn_widget=None, use_epam=True, pr
 
     import threading
     threading.Thread(target=run_script, daemon=True).start()
-                        f.write(instructions)
-                        
-                    # -o raw передает машинный код в принтер без изменений!
-                    cmd = ["lp", "-d", selected_printer, "-o", "raw", bin_path]
-                except Exception as e:
-                    print("Brother_ql error:", e)
-                    cmd = ["lp", "-d", selected_printer, "-o", "fit-to-page", image_path]
-                
-                result = subprocess.run(cmd, capture_output=True, text=True)
-                
-                if result.returncode != 0:
-                    err_msg = result.stderr.strip() if result.stderr else "Неизвестная ошибка CUPS"
-                    window.after(0, lambda e=err_msg: messagebox.showerror("Ошибка печати", f"Скрипт сообщил об ошибке:\n{e}"))
-                
-                try:
-                    os.remove(image_path)
-                    os.remove(bin_path)
-                except:
-                    pass
-                    
-            # Подсистема Mac (CUPS) скрывает реальный статус железа около 30 секунд.
-            # Самый надежный способ узнать завис ли принтер - проверить убывает ли очередь заданий:
-            def get_queue_size():
-                res = subprocess.run(["lpstat", "-o", selected_printer], capture_output=True, text=True).stdout
-                return len([line for line in res.split('\n') if line.strip()])
-
-            initial_jobs = get_queue_size()
-            
-            if initial_jobs == 0:
-                # Очередь пуста моментально - принтер съел файл
-                window.after(0, lambda: status_widget.config(text="✅ Успешно отправлено!", foreground="green"))
-                window.after(3000, lambda: status_widget.config(text=""))
-            else:
-                import time
-                time.sleep(2.0) # Ждем 2 секунды, чтобы дать принтеру шанс
-                current_jobs = get_queue_size()
-                
-                if current_jobs >= initial_jobs:
-                    # Принтер не смог забрать ни одного задания за 2 секунды - он выключен
-                    # Очищаем очередь команд 
-                    subprocess.run(["cancel", "-a", selected_printer], capture_output=True)
-                    window.after(0, lambda: messagebox.showwarning(
-                        "Принтер не отвечает", 
-                        f"Задания зависли в системной очереди macOS.\n\n"
-                        f"Принтер '{selected_printer}' выключен, находится в спящем режиме или потерял связь.\n"
-                        "Все зависшие задания удалены, чтобы избежать случайной печати."
-                    ))
-                    window.after(0, lambda: status_widget.config(text="❌ Принтер Off-line", foreground="red"))
-                else:
-                    window.after(0, lambda: status_widget.config(text="✅ Успешно отправлено!", foreground="green"))
-                    window.after(3000, lambda: status_widget.config(text=""))
-        except Exception as e:
-            window.after(0, lambda e=e: messagebox.showerror("Системная ошибка", f"Детали:\n{e}"))
-            window.after(0, lambda: status_widget.config(text="❌ Ошибка", foreground="red"))
-        finally:
-            if btn_widget:
-                window.after(0, lambda: btn_widget.config(state=tk.NORMAL))
-
-    threading.Thread(target=run_script, daemon=True).start()
 
 def print_batch():
     raw_text = text_input.get("1.0", tk.END).strip()
