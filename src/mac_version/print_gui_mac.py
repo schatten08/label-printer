@@ -248,6 +248,9 @@ def check_for_updates():
                 # Устраняем ошибку "dubious ownership" (для сетевых папок или разных прав)
                 subprocess.run(["git", "config", "--global", "--add", "safe.directory", project_root])
                 
+                # Принудительно сбрасываем локальные изменения перед пулом, если они есть
+                subprocess.run(["git", "reset", "--hard", "HEAD"], cwd=project_root)
+                
                 # Пытаемся сделать git pull с явным указанием пути к репозиторию
                 process = subprocess.Popen(
                     ["git", "pull", "--no-rebase", "https://github.com/schatten08/label-printer.git", "main"], 
