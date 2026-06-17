@@ -11,7 +11,7 @@ import urllib.request
 import webbrowser
 
 # Текущая версия программы (дата последнего коммита)
-APP_VERSION = "2024-06-04 15:00"
+APP_VERSION = "2026-06-15 15:15"
 
 try:
     import warnings
