@@ -11,9 +11,28 @@ echo
 # 1. Проверка Python 3
 if ! command -v python3 &> /dev/null
 then
-    echo "[ОШИБКА] Python 3 не найден!"
-    echo "Пожалуйста, установите Python с официального сайта: https://www.python.org/"
-    exit
+    echo "[!] Python 3 не найден!"
+    read -p "Хотите автоматически скачать и запустить установщик Python для Mac? (y/n): " choice
+    if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
+        echo "[PROCESS] Скачивание Python 3.12..."
+        PY_URL="https://www.python.org/ftp/python/3.12.3/python-3.12.3-macos11.pkg"
+        PY_PKG="/tmp/python_install.pkg"
+        curl -o "$PY_PKG" "$PY_URL"
+        
+        echo "[PROCESS] Запуск установщика... Следуйте инструкциям на экране."
+        open "$PY_PKG"
+        
+        echo
+        echo "======================================================"
+        echo "ПОСЛЕ завершения установки Python, закройте это окно"
+        echo "и запустите 'Install_Mac.command' еще раз."
+        echo "======================================================"
+        exit
+    else
+        echo "[ОШИБКА] Python 3 необходим для работы."
+        echo "Пожалуйста, установите его с официального сайта: https://www.python.org/"
+        exit
+    fi
 fi
 
 echo "[1/2] Установка необходимых библиотек..."

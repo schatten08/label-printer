@@ -19,11 +19,32 @@ echo.
 echo [1/3] Checking Python installation...
 python --version >nul 2>&1
 if %errorLevel% neq 0 (
-    echo [ERROR] Python is not installed or not in PATH.
-    echo Please download and install Python from: https://www.python.org/downloads/
-    echo IMPORTANT: Check the box "Add Python to PATH" during installation.
-    pause
-    exit /b
+    echo [!] Python is not installed or not in PATH.
+    echo.
+    set /p "install_python=Would you like to download and install Python 3 automatically? (y/n): "
+    if /i "%install_python%"=="y" (
+        echo.
+        echo [PROCESS] Downloading Python 3.12 installer...
+        set "py_url=https://www.python.org/ftp/python/3.12.3/python-3.12.3-amd64.exe"
+        set "py_exe=%temp%\python_installer.exe"
+        powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; (New-Object System.Net.WebClient).DownloadFile('%py_url%', '%py_exe%')"
+        
+        echo [PROCESS] Launching installer...
+        echo IMPORTANT: When requested, ensure you check 'Add Python to PATH'!
+        start /wait "" "%py_exe%" /passive PrependPath=1 Include_test=0
+        
+        echo.
+        echo [OK] Installation attempt finished.
+        echo Please CLOSE this window and launch 'Install_Setup.bat' AGAIN to finish setup.
+        pause
+        exit /b
+    ) else (
+        echo.
+        echo [ERROR] Python is required. Please install it from: https://www.python.org/
+        echo IMPORTANT: Check the box "Add Python to PATH" during installation.
+        pause
+        exit /b
+    )
 )
 echo [OK] Python found.
 
