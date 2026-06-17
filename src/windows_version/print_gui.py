@@ -522,13 +522,13 @@ def check_for_updates():
                 subprocess.run(["git", "fetch", "--all"], cwd=project_root, creationflags=subprocess.CREATE_NO_WINDOW)
                 
                 # Запоминаем текущий хэш
-                old_hash = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=project_root, text=True).strip()
+                old_hash = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=project_root, text=True, creationflags=subprocess.CREATE_NO_WINDOW).strip()
                 
                 # Сбрасываем к состоянию на сервере (это лечит любые ошибки с локальными файлами)
                 subprocess.run(["git", "reset", "--hard", "origin/main"], cwd=project_root, creationflags=subprocess.CREATE_NO_WINDOW)
                 
                 # Проверяем, изменился ли хэш
-                new_hash = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=project_root, text=True).strip()
+                new_hash = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=project_root, text=True, creationflags=subprocess.CREATE_NO_WINDOW).strip()
                 
                 if old_hash == new_hash:
                     window.after(0, lambda: messagebox.showinfo("Update", l.get("upd_ok", "✅ Latest version!")))
