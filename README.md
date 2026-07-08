@@ -6,12 +6,13 @@
 
 ## 🚀 БЫСТРЫЙ СТАРТ (Windows)
 
-Если на вашем ноутбуке установлен строгий антивирус (например, **SentinelOne**), который удаляет `.exe` файл, используйте запуск через скрипт:
+Для работы программы на Windows **обязательно** должен быть установлен системный компонент от Brother (один раз):
 
-1.  **⚠️ ШАГ 1 (ОБЯЗАТЕЛЬНО)**: Установите системный компонент **[bPAC Client Component](https://github.com/schatten08/label-printer/raw/main/setup/bPACClientComponent_x64.msi)**.
-2.  **Шаг 2**: Скачайте проект целиком (Кнопка **<> Code** -> **Download ZIP**) и распакуйте его.
-3.  **Шаг 3**: Запустите файл `Run_Printer.bat` из корня папки.
-    *   *Скрипт сам проверит Python и запустит программу напрямую из исходного кода, что не вызывает подозрений у SentinelOne.*
+1.  **⚠️ ШАГ 1 (ОБЯЗАТЕЛЬНО)**: Скачайте и установите **[bPAC Client Component (x64)](https://support.brother.com/g/s/es/dev/en/bpac/download/index.aspx#client)**.
+    *   *На странице выберите "Client Component" для вашей версии Windows.*
+2.  **Шаг 2**: Выберите способ запуска:
+    *   **Вариант А (Простой)**: Скачайте и запустите **[Label_Printer.exe](https://github.com/schatten08/label-printer/raw/main/src/windows_version/dist/Label_Printer.exe)**.
+    *   **Вариант Б (Если антивирус удаляет EXE)**: Скачайте проект целиком (Архив ZIP), распакуйте и запустите `Run_Printer.bat`.
 
 ---
 
