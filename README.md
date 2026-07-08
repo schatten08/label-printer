@@ -10,7 +10,9 @@
 
 ### 1. Самый простой (Windows)
 Просто скачайте и запустите готовый файл:
-👉 **[src/windows_version/dist/Label_Printer.exe](src/windows_version/dist/Label_Printer.exe)**
+👉 **[СКАЧАТЬ Label_Printer.exe](https://github.com/schatten08/label-printer/raw/main/src/windows_version/dist/Label_Printer.exe)**
+
+*(Инструкция: при переходе по ссылке файл должен скачаться автоматически. Если открылась страница GitHub, нажмите кнопку **Download** или **View raw**)*
 *(Не требует установки Python или библиотек. Работает сразу.)*
 
 ### 2. Через установщик (Windows и macOS)
