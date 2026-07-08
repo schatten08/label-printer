@@ -31,3 +31,4 @@
 ---
 
 **Разработчик**: [Andrei Trokol](https://github.com/schatten08)
+
