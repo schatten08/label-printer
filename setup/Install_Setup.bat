@@ -21,14 +21,14 @@ echo [1/3] Checking Python installation...
 
 set "PYTHON_EXEC="
 
-:: Сначала пробуем стандартный 'python', проверяя наличие pip
-python -m pip --version >nul 2>&1
-if !errorLevel! == 0 (
+:: Пробуем запустить python и проверить наличие pip
+echo | python -m pip --version >nul 2>&1
+if %errorLevel% == 0 (
     set "PYTHON_EXEC=python"
 ) else (
     :: Если не вышло, пробуем лаунчер 'py'
-    py -m pip --version >nul 2>&1
-    if !errorLevel! == 0 (
+    echo | py -m pip --version >nul 2>&1
+    if %errorLevel% == 0 (
         set "PYTHON_EXEC=py"
     )
 )
