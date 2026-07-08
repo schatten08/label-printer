@@ -14,15 +14,13 @@
 
 ---
 
-## 📦 ПОЛНАЯ УСТАНОВКА (Windows и macOS)
+## 📦 УСТАНОВКА (macOS)
 
-Если вы хотите запускать программу через ярлык на Рабочем столе и получать автоматические обновления через Git:
+Чтобы запустить программу на Mac:
 
 1.  Скачайте архив проекта (Зеленая кнопка **<> Code** -> **Download ZIP**) или склонируйте репозиторий.
 2.  Зайдите в папку [setup/](setup/)
-3.  Запустите нужный файл:
-    -   **Windows**: запустите [Install_Setup.bat](setup/Install_Setup.bat) от имени Администратора.
-    -   **macOS**: запустите [Install_Mac.command](setup/Install_Mac.command).
+3.  Запустите файл [Install_Mac.command](setup/Install_Mac.command) (двойным кликом).
 
 **Что сделает установщик:**
 - Проверит наличие Python (и предложит установить, если его нет).
@@ -66,11 +64,6 @@
 - **Принтер**: Серия Brother QL (тестировалось на QL-810W).
 - **Windows**: Требуется установленный [Brother bPAC SDK](https://support.brother.com/g/s/es/dev/en/bpac/index.html).
 - **macOS**: Используется библиотека `brother_ql` для прямой печати через USB/Wi-Fi.
-
-### Настройка сканера (Zebra DS22)
-Для работы в режиме Bluetooth:
-- **Windows**: Используйте утилиту [123Scan](https://www.zebra.com/us/en/support-downloads/software/scanner-software/cordless-scantoconnect.html).
-- **macOS**: Подключается как стандартная Bluetooth-клавиатура через системные настройки.
 
 ---
 
