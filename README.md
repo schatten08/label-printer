@@ -8,7 +8,7 @@
 
 Для работы программы на Windows **обязательно** должен быть установлен системный компонент от Brother (один раз):
 
-1.  **⚠️ ШАГ 1 (ОБЯЗАТЕЛЬНО)**: Скачайте и установите **[bPAC Client Component (x64)](https://support.brother.com/g/s/es/dev/en/bpac/download/index.aspx#client)**.
+1.  **⚠️ ШАГ 1 (ОБЯЗАТЕЛЬНО)**: Скачайте и установите **[bPAC Client Component (x64)](https://support.brother.com/g/s/es/dev/en/bpac/download/index.html?c=eu_ot&lang=en&navi=offall&comple=on&redirect=on)**.
     *   *На странице выберите "Client Component" для вашей версии Windows.*
 2.  **Шаг 2**: Выберите способ запуска:
     *   **Вариант А (Простой)**: Скачайте и запустите **[Label_Printer.exe](https://github.com/schatten08/label-printer/raw/main/src/windows_version/dist/Label_Printer.exe)**.
