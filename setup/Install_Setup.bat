@@ -1,13 +1,13 @@
 @echo off
 title Brother Label Printer - Environment Setup
-setlocal
+setlocal enabledelayedexpansion
 
 echo ======================================================
 echo    Brother Label Printer: Setup Environment
 echo ======================================================
 echo.
 
-:: 1. Проверка прав администратора (нужны для реестра и установки SDK в будущем)
+:: 1. Проверка прав администратора
 net session >nul 2>&1
 if %errorLevel% == 0 (
     echo [OK] Running with administrative privileges.
@@ -19,27 +19,25 @@ if %errorLevel% == 0 (
 echo.
 echo [1/3] Checking Python installation...
 
-:: Пытаемся найти работающий Python (сначала через лаунчер 'py', потом просто 'python')
 set "PYTHON_EXEC="
-py -0 >nul 2>&1 && set "PYTHON_EXEC=py"
-if not defined PYTHON_EXEC (
-    python --version >nul 2>&1 && set "PYTHON_EXEC=python"
-)
 
-:: Проверяем, есть ли Python и работает ли в нем pip
-if defined PYTHON_EXEC (
-    %PYTHON_EXEC% -m pip --version >nul 2>&1
-    if %errorLevel% neq 0 (
-        echo [!] Python found, but 'pip' module is missing or broken.
-        set "PYTHON_EXEC="
+:: Сначала пробуем стандартный 'python', проверяя наличие pip
+python -m pip --version >nul 2>&1
+if !errorLevel! == 0 (
+    set "PYTHON_EXEC=python"
+) else (
+    :: Если не вышло, пробуем лаунчер 'py'
+    py -m pip --version >nul 2>&1
+    if !errorLevel! == 0 (
+        set "PYTHON_EXEC=py"
     )
 )
 
 if not defined PYTHON_EXEC (
-    echo [!] Working Python not found or pip is missing.
+    echo [!] Working Python with 'pip' not found in PATH.
     echo.
     set /p "install_python=Would you like to download and install Python 3.12 automatically? (y/n): "
-    if /i "%install_python%"=="y" (
+    if /i "!install_python!"=="y" (
         echo.
         echo [PROCESS] Downloading Python 3.12 installer...
         set "py_url=https://www.python.org/ftp/python/3.12.3/python-3.12.3-amd64.exe"
@@ -52,18 +50,18 @@ if not defined PYTHON_EXEC (
         
         echo.
         echo [OK] Installation attempt finished.
-        echo Please CLOSE this window and launch 'Install_Setup.bat' AGAIN to finish setup.
+        echo Please CLOSE this window and launch 'Install_Setup.bat' AGAIN.
         pause
         exit /b
     ) else (
         echo.
         echo [ERROR] Python with 'pip' is required. Please install it from: https://www.python.org/
-        echo IMPORTANT: Check the box "Add Python to PATH" during installation.
         pause
         exit /b
     )
 )
-echo [OK] Python found (%PYTHON_EXEC%).
+
+echo [OK] Python found: !PYTHON_EXEC!
 
 :: 3. Обновление pip и установка библиотек
 echo.
