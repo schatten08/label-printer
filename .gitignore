@@ -3,11 +3,20 @@ __pycache__/
 *.py[cod]
 *$py.class
 venv/
+.venv/
 .env
 
 # App specific
 config.json
 logs/
+
+# Build artifacts (PyInstaller)
+build/
+dist/
+*.exe
+*.pkg
+*.lnk
+*.spec.bak
 
 # OS specific
 .DS_Store
