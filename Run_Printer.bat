@@ -2,6 +2,17 @@
 setlocal
 cd /d "%~dp0"
 
+:: Self-elevate to Administrator if not already running as admin.
+:: This is required because installing the b-PAC Client Component (system-wide
+:: COM component via msiexec) silently fails without admin rights - msiexec /qn
+:: suppresses all UI including the UAC prompt, so the failure is invisible.
+net session >nul 2>&1
+if %errorlevel% neq 0 (
+    echo Requesting administrator privileges - a UAC prompt will appear, please click Yes...
+    powershell -NoProfile -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
+    exit /b
+)
+
 echo ===================================================
 echo [1/4] Checking Python environment...
 echo ===================================================
@@ -82,8 +93,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "[Net.ServicePointManager
 
 if not exist "%BPAC_MSI%" goto BPAC_DL_FAIL
 
-echo Installing b-PAC Client Component (a Windows permission prompt may appear - click Yes)...
-msiexec /i "%BPAC_MSI%" /qn /norestart
+echo Installing b-PAC Client Component...
+msiexec /i "%BPAC_MSI%" /qn /norestart /l*v "%TEMP%\bpac_install.log"
 del "%BPAC_MSI%" >nul 2>&1
 
 powershell -NoProfile -Command "try { New-Object -ComObject bpac.Document | Out-Null; exit 0 } catch { exit 1 }" >nul 2>&1

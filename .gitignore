@@ -9,6 +9,7 @@ venv/
 # App specific
 config.json
 logs/
+sandbox-test/logs/*.txt
 
 # Build artifacts (PyInstaller)
 build/
