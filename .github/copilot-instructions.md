@@ -14,7 +14,10 @@
   - Использует открытую библиотеку `brother_ql` для прямой отправки команд растровой печати на принтер (через USB / Wi-Fi).
 
 - **Обход антивирусов / Простой запуск (Windows)**: [Run_Printer.bat](Run_Printer.bat)
-  - Автоматически находит или скрытно устанавливает Python 3.12 (`/quiet`), ставит `pywin32` и запускает `print_gui.py` без консольного окна через `pyw`.
+  - Автоматически находит или скрытно устанавливает Python 3.12 (`/quiet`).
+  - Проверяет наличие COM-объекта `bpac.Document` и, если его нет, скачивает и тихо устанавливает официальный `b-PAC Client Component (x64)` MSI от Brother (`msiexec /qn`) — может показать запрос UAC.
+  - Ставит зависимости из `src/windows_version/requirements.txt` (`pywin32`).
+  - Запускает `print_gui.py` без консольного окна через `pyw`.
 
 - **Сборка EXE (PyInstaller)**:
   - Настройки сборки: [src/windows_version/Label_Printer.spec](src/windows_version/Label_Printer.spec).

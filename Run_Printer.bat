@@ -3,7 +3,7 @@ setlocal
 cd /d "%~dp0"
 
 echo ===================================================
-echo [1/3] Checking Python environment...
+echo [1/4] Checking Python environment...
 echo ===================================================
 
 set "PYTHON_CMD="
@@ -68,13 +68,47 @@ goto RUN_PIP
 echo [+] Using Python: %PYTHON_CMD%
 echo.
 echo ===================================================
-echo [2/3] Installing required libraries...
+echo [2/4] Checking Brother b-PAC component...
+echo ===================================================
+
+:: b-PAC is a system COM component required to talk to the printer.
+:: Detect it by trying to instantiate the bpac.Document COM object.
+powershell -NoProfile -Command "try { New-Object -ComObject bpac.Document | Out-Null; exit 0 } catch { exit 1 }" >nul 2>&1
+if %errorlevel% equ 0 goto BPAC_OK
+
+echo [!] b-PAC Client Component not found. Downloading official installer...
+set "BPAC_MSI=%TEMP%\bpac_client_x64.msi"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; (New-Object System.Net.WebClient).DownloadFile('https://download.brother.com/welcome/dlfp101010/bcciw34015_64.msi', '%BPAC_MSI%')"
+
+if not exist "%BPAC_MSI%" goto BPAC_DL_FAIL
+
+echo Installing b-PAC Client Component (a Windows permission prompt may appear - click Yes)...
+msiexec /i "%BPAC_MSI%" /qn /norestart
+del "%BPAC_MSI%" >nul 2>&1
+
+powershell -NoProfile -Command "try { New-Object -ComObject bpac.Document | Out-Null; exit 0 } catch { exit 1 }" >nul 2>&1
+if %errorlevel% equ 0 goto BPAC_OK
+
+echo [WARNING] Could not verify b-PAC installation. If printing fails later, install it manually:
+echo https://support.brother.com/g/s/es/dev/en/bpac/download/index.html
+goto BPAC_OK
+
+:BPAC_DL_FAIL
+echo [WARNING] Failed to download the b-PAC installer (check your internet connection).
+echo Please install it manually:
+echo https://support.brother.com/g/s/es/dev/en/bpac/download/index.html
+
+:BPAC_OK
+echo.
+echo ===================================================
+echo [3/4] Installing required Python libraries...
 echo ===================================================
 %PYTHON_CMD% -m pip install -r "src\windows_version\requirements.txt" --quiet
+if %errorlevel% neq 0 echo [WARNING] pip install failed. Check your internet connection or proxy settings.
 
 echo.
 echo ===================================================
-echo [3/3] Launching Brother Label Printer...
+echo [4/4] Launching Brother Label Printer...
 echo ===================================================
 start "" %PYTHONW_CMD% "src\windows_version\print_gui.py"
 exit /b 0
