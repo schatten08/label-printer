@@ -18,7 +18,7 @@
 
 - **Сборка EXE (PyInstaller)**:
   - Настройки сборки: [src/windows_version/Label_Printer.spec](src/windows_version/Label_Printer.spec).
-  - Скомпилированный бинарник дистрибутива: [src/windows_version/dist/Label_Printer.exe](src/windows_version/dist/Label_Printer.exe).
+  - `build/` и `dist/` — генерируемые каталоги, **не коммитятся в git** (см. `.gitignore`). Готовый `.exe` не распространяется через репозиторий: корпоративные антивирусы (SentinelOne/Defender) блокируют неподписанные бинарники, поэтому основной способ запуска — `Run_Printer.bat`.
 
 ## 🚀 Команды запуска и сборки
 

@@ -12,8 +12,10 @@ from datetime import datetime
 import urllib.request
 import webbrowser
 
-# Текущая версия программы (дата последнего коммита)
-APP_VERSION = "2026-06-17 17:30"
+# Текущая версия программы (дата последнего релиза, см. CHANGELOG.md).
+# Формат ISO ("YYYY-MM-DD HH:MM") важен: строка сравнивается лексикографически
+# с датой коммита GitHub API в check_for_updates().
+APP_VERSION = "2026-08-03 00:00"
 
 # --- Проверка на повторный запуск (Только для Windows) ---
 mutex_name = "BrotherLabelPrinter_SingleInstanceMutex"

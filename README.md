@@ -10,9 +10,9 @@
 
 1.  **⚠️ ШАГ 1 (ОБЯЗАТЕЛЬНО)**: Скачайте и установите **[bPAC Client Component (x64)](https://support.brother.com/g/s/es/dev/en/bpac/download/index.html?c=eu_ot&lang=en&navi=offall&comple=on&redirect=on)**.
     *   *Это официальная страница загрузки. Выберите "Client Component" для вашей версии Windows.*
-2.  **Шаг 2**: Выберите способ запуска:
-    *   **Вариант А (Простой)**: Скачайте и запустите **[Label_Printer.exe](https://github.com/schatten08/label-printer/raw/main/src/windows_version/dist/Label_Printer.exe)**.
-    *   **Вариант Б (Если антивирус удаляет EXE)**: Скачайте проект целиком (Архив ZIP), распакуйте и запустите `Run_Printer.bat`.
+2.  **Шаг 2**: Скачайте проект целиком (Архив ZIP или `git clone`), распакуйте и запустите `Run_Printer.bat`.
+    *   Скрипт сам найдёт/установит Python и нужные библиотеки, после чего запустит программу.
+    *   *Готовый `.exe` не поставляется — большинство корпоративных антивирусов (SentinelOne/Defender) блокируют неподписанные exe-файлы, поэтому запуск через `.bat` надёжнее.*
 
 ---
 
