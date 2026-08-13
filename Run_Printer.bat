@@ -68,9 +68,9 @@ goto RUN_PIP
 echo [+] Using Python: %PYTHON_CMD%
 echo.
 echo ===================================================
-echo [2/3] Installing required libraries (pywin32)...
+echo [2/3] Installing required libraries...
 echo ===================================================
-%PYTHON_CMD% -m pip install pywin32 --quiet
+%PYTHON_CMD% -m pip install -r "src\windows_version\requirements.txt" --quiet
 
 echo.
 echo ===================================================
