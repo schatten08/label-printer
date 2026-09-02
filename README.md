@@ -21,6 +21,20 @@
 1.  Скачайте архив проекта (ZIP).
 2.  Запустите [setup/Install_Mac.command](setup/Install_Mac.command).
 
+> ⚠️ **Mac пишет "Install_Mac.command Not Opened / could not verify... free of malware"?**
+> Это стандартная блокировка Gatekeeper для неподписанных скриптов, скачанных из интернета — ничего критического.
+>
+> **Как запустить (выберите любой способ):**
+> - **Через Finder:** нажмите **Done** в окне ошибки (НЕ "Move to Trash") → **System Settings → Privacy & Security** → внизу найдите строку про `Install_Mac.command` → **Open Anyway** → подтвердите запуск.
+> - **Через правый клик:** Ctrl+клик (или правая кнопка мыши) на `Install_Mac.command` → **Open** → в диалоге нажмите **Open**.
+> - **Через Terminal:**
+>   ```bash
+>   cd ~/Downloads/label-printer-main/setup
+>   xattr -d com.apple.quarantine Install_Mac.command
+>   chmod +x Install_Mac.command
+>   ./Install_Mac.command
+>   ```
+
 ---
 
 ## 🛠️ Основные функции
