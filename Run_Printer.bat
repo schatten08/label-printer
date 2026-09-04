@@ -119,7 +119,11 @@ echo ===================================================
 :: Windows printer/driver entry, which Brother ships as a separate package.
 :: Full silent install is not officially documented by Brother, so we just
 :: detect and, if missing, open the official download page automatically.
-powershell -NoProfile -Command "if (Get-Printer -ErrorAction SilentlyContinue | Where-Object { $_.Name -like '*QL-810W*' -or $_.DriverName -like '*Brother QL*' }) { exit 0 } else { exit 1 }" >nul 2>&1
+:: NOTE: check DriverName (the actual installed driver), not just the
+:: device Name - Windows can auto-create a "Brother QL-810W" USB entry
+:: with a generic driver before the real driver is installed, which would
+:: otherwise cause a false "driver is fine" match.
+powershell -NoProfile -Command "if (Get-Printer -ErrorAction SilentlyContinue | Where-Object { $_.DriverName -like '*Brother QL*' }) { exit 0 } else { exit 1 }" >nul 2>&1
 if %errorlevel% equ 0 goto DRIVER_OK
 
 echo [WARNING] Brother QL printer driver was not found in Windows.
