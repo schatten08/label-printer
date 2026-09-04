@@ -108,6 +108,12 @@ def send_to_printer(text, status_widget, btn_widget=None, use_epam=True, print_b
                     return
             except Exception as e:
                 print("Skipping online check:", e)
+                window.after(0, lambda: messagebox.showwarning(
+                    "Проверка принтера пропущена",
+                    f"Не удалось проверить статус принтера '{selected_printer}'.\n\n"
+                    "Часто это значит, что установлен только b-PAC, но НЕ установлен сам "
+                    "драйвер принтера Brother. Попытка печати продолжится."
+                ))
 
             script_dir = os.path.dirname(os.path.abspath(__file__))
             if print_barcode:
@@ -125,11 +131,23 @@ def send_to_printer(text, status_widget, btn_widget=None, use_epam=True, print_b
                 return
 
             # Выставляем принтер
-            doc.SetPrinter(selected_printer, False)
+            if not doc.SetPrinter(selected_printer, False):
+                window.after(0, lambda: messagebox.showerror(
+                    "Принтер не найден в Windows",
+                    f"Не удалось выбрать принтер '{selected_printer}'.\n\n"
+                    "Обычно это значит, что установлен только компонент b-PAC, но НЕ установлен "
+                    "сам драйвер принтера Brother.\n\nСкачайте и установите 'Printer Driver' "
+                    "с официального сайта Brother для вашей модели, затем добавьте принтер в Windows."
+                ))
+                window.after(0, lambda: status_widget.config(text="❌ Принтер не найден", foreground="red"))
+                window.after(0, lambda: progress_frame.pack_forget())
+                if callable(doc.Close): doc.Close()
+                return
             
             # Открываем канал печати 1 раз (Пакетная печать быстрее)
             doc.StartPrint("Batch Labels", 0)
 
+            failed = 0
             for i, num in enumerate(numbers, 1):
                 lbl = doc.GetObject("Label")
                 if lbl:
@@ -146,7 +164,8 @@ def send_to_printer(text, status_widget, btn_widget=None, use_epam=True, print_b
                     bc.Text = num if print_barcode else ""
                 
                 # Закидываем в очередь печати 1 копию и переходим к следующему
-                doc.PrintOut(1, 0)
+                if not doc.PrintOut(1, 0):
+                    failed += 1
                 
                 window.after(0, lambda val=i: progress_bar.configure(value=val))
                 window.after(0, lambda val=i: progress_lbl.config(text=f"{val} / {total_count}"))
@@ -158,7 +177,16 @@ def send_to_printer(text, status_widget, btn_widget=None, use_epam=True, print_b
             if callable(doc.Close): doc.Close()
             else: _ = doc.Close
 
-            window.after(0, lambda: status_widget.config(text=f"✅ Напечатано: {len(numbers)} шт.", foreground="green"))
+            if failed:
+                window.after(0, lambda: status_widget.config(text=f"⚠️ Напечатано {len(numbers) - failed} из {len(numbers)} (ошибок: {failed})", foreground="orange"))
+                window.after(0, lambda: messagebox.showwarning(
+                    "Часть этикеток не напечатана",
+                    f"{failed} из {len(numbers)} этикеток не удалось отправить на печать.\n\n"
+                    "Проверьте, что установлен драйвер принтера Brother (одного b-PAC недостаточно), "
+                    "а также что принтер включен и подключен."
+                ))
+            else:
+                window.after(0, lambda: status_widget.config(text=f"✅ Напечатано: {len(numbers)} шт.", foreground="green"))
             window.after(2000, lambda: progress_frame.pack_forget())
             
         except Exception as e:

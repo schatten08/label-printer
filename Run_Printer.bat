@@ -112,14 +112,36 @@ echo https://support.brother.com/g/s/es/dev/en/bpac/download/index.html
 :BPAC_OK
 echo.
 echo ===================================================
-echo [3/4] Installing required Python libraries...
+echo [3/5] Checking Brother printer driver...
+echo ===================================================
+
+:: b-PAC only provides COM automation. The physical printer needs a real
+:: Windows printer/driver entry, which Brother ships as a separate package.
+:: Full silent install is not officially documented by Brother, so we just
+:: detect and, if missing, open the official download page automatically.
+powershell -NoProfile -Command "if (Get-Printer -ErrorAction SilentlyContinue | Where-Object { $_.Name -like '*QL-810W*' -or $_.DriverName -like '*Brother QL*' }) { exit 0 } else { exit 1 }" >nul 2>&1
+if %errorlevel% equ 0 goto DRIVER_OK
+
+echo [WARNING] Brother QL printer driver was not found in Windows.
+echo b-PAC alone cannot send jobs to the physical printer - printing may
+echo silently report "success" without producing a label.
+echo.
+echo Opening the official Brother driver download page in your browser...
+echo Please download and install "Printer Driver" (NOT b-PAC) for your model,
+echo then run this file again.
+start "" "https://support.brother.com/g/b/downloadtop.aspx?c=us&lang=en&prod=lpql810weus"
+
+:DRIVER_OK
+echo.
+echo ===================================================
+echo [4/5] Installing required Python libraries...
 echo ===================================================
 %PYTHON_CMD% -m pip install -r "src\windows_version\requirements.txt" --quiet
 if %errorlevel% neq 0 echo [WARNING] pip install failed. Check your internet connection or proxy settings.
 
 echo.
 echo ===================================================
-echo [4/4] Launching Brother Label Printer...
+echo [5/5] Launching Brother Label Printer...
 echo ===================================================
 start "" %PYTHONW_CMD% "src\windows_version\print_gui.py"
 exit /b 0
