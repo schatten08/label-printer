@@ -118,7 +118,8 @@ echo ===================================================
 :: b-PAC only provides COM automation. The physical printer needs a real
 :: Windows printer/driver entry, which Brother ships as a separate package.
 :: Full silent install is not officially documented by Brother, so we just
-:: detect and, if missing, open the official download page automatically.
+:: detect and, if missing, download and launch the official installer
+:: (still requires a few clicks through its wizard).
 :: NOTE: check DriverName (the actual installed driver), not just the
 :: device Name - Windows can auto-create a "Brother QL-810W" USB entry
 :: with a generic driver before the real driver is installed, which would
@@ -128,12 +129,24 @@ if %errorlevel% equ 0 goto DRIVER_OK
 
 echo [WARNING] Brother QL printer driver was not found in Windows.
 echo b-PAC alone cannot send jobs to the physical printer - printing may
-echo silently report "success" without producing a label.
+echo silently report "success" without producing a label, or the app may hang.
 echo.
-echo Opening the official Brother driver download page in your browser...
-echo Please download and install "Printer Driver" (NOT b-PAC) for your model,
-echo then run this file again.
-start "" "https://support.brother.com/g/b/downloadtop.aspx?c=us&lang=en&prod=lpql810weus"
+echo Downloading the official Brother "Software/Document Installer"
+echo (installs the printer driver AND P-touch Editor together - the
+echo driver alone was not enough in past cases)...
+set "BROTHER_INSTALLER=%TEMP%\Brother_CommonInstaller.exe"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; (New-Object System.Net.WebClient).DownloadFile('https://download.brother.com/welcome/dlfp100033/CommonInstaller.exe', '%BROTHER_INSTALLER%')"
+
+if not exist "%BROTHER_INSTALLER%" goto DRIVER_DL_FAIL
+
+echo Launching installer - please follow the on-screen steps, then run this file again.
+start "" "%BROTHER_INSTALLER%"
+goto DRIVER_OK
+
+:DRIVER_DL_FAIL
+echo [WARNING] Failed to download the installer (check your internet connection).
+echo Please install it manually from:
+echo https://support.brother.com/g/b/downloadtop.aspx?c=us^&lang=en^&prod=lpql810weus
 
 :DRIVER_OK
 echo.
