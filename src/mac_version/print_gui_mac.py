@@ -10,6 +10,11 @@ import json
 import urllib.request
 import webbrowser
 
+# Общие константы и утилиты (LANGS, parse_mapping, config helpers, etc.)
+import sys as _sys
+_sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+from shared import LANGS, parse_mapping, lookup_sn, load_config, save_config_key, is_newer_version_available
+
 # Текущая версия программы (дата последнего релиза, см. CHANGELOG.md).
 # Формат ISO ("YYYY-MM-DD HH:MM") важен: строка сравнивается лексикографически
 # с датой коммита GitHub API в check_for_updates().
@@ -18,7 +23,7 @@ APP_VERSION = "2026-08-03 00:00"
 try:
     import warnings
     warnings.filterwarnings("ignore", category=DeprecationWarning)
-    
+
     import barcode
     from barcode.writer import ImageWriter
     import PIL
@@ -31,88 +36,13 @@ except ImportError:
 
 
 CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
-LANGS = {
-    "ru": {
-        "title": "Печать этикеток",
-        "printer": "Принтер:",
-        "t_batch": " 📝 Список (Массовая) ",
-        "d_batch": "Введите инвентарные номера (можно таблицей):",
-        "btn_p": "Печать",
-        "btn_f": "Печать",
-        "t_scan": " 🔍 Сканер коробок / оборудования ",
-        "d_dict": "1. Вставьте 2 колонки из Excel (SN и Label):",
-        "d_scan": "2. Фокус сюда (перейдет автоматически) и сканируйте:",
-        "t_inv": " 📋 Инвентаризация ",
-        "i_top": "1. Вставьте базу (Label / Модель):",
-        "btn_ld": "⚙️ Загрузить базу",
-        "i_scan": "2. Сканируйте:",
-        "btn_ex": "💾 Экспорт отчета в CSV",
-        "c_stat": "Статус",
-        "c_lbl": "Label (Инвентарный №)",
-        "c_mod": "Модель",
-        "s_pend": "❌ Ожидает",
-        "s_found": "✅ Найдено",
-        "s_stats": "Найдено:",
-        "found_stat": "Найдено:",
-        "btn_upd": "🔄 Проверить обновление",
-        "upd_ok": "✅ У вас последняя версия!",
-        "upd_err": "❌ Ошибка при проверке",
-        "upd_no_git": "❌ Git не найден! Установите его с git-scm.com",
-        "upd_no_git_ask": "Git не установлен. Проверить новую версию в браузере?",
-        "upd_not_repo": "❌ Программа скачана как архив. Авто-обновление невозможно.",
-        "upd_not_repo_ask": "Папка не является Git-репозиторием. Хотите включить автоматические обновления?\n(Это создаст .git папку и синхронизирует код с GitHub)",
-        "upd_init_ok": "✅ Теперь обновления включены! Нажмите кнопку еще раз.",
-        "upd_new_zip": "🚀 Найдена новая версия! Открыть страницу загрузки?"
-    },
-    "en": {
-        "title": "Label Printing",
-        "printer": "Printer:",
-        "t_batch": " 📝 List (Batch) ",
-        "d_batch": "Enter inventory numbers (table format supported):",
-        "btn_p": "Print",
-        "btn_f": "Print",
-        "t_scan": " 🔍 Equipment Scanner ",
-        "d_dict": "1. Paste 2 columns from Excel (SN and Label):",
-        "d_scan": "2. Focus here (moves automatically) and scan:",
-        "t_inv": " 📋 Inventory Audit ",
-        "i_top": "1. Paste database (Label / Model):",
-        "btn_ld": "⚙️ Load Database",
-        "i_scan": "2. Scan:",
-        "btn_ex": "💾 Export Report",
-        "c_stat": "Status",
-        "c_lbl": "Label (Inventory ID)",
-        "c_mod": "Model",
-        "s_pend": "❌ Pending",
-        "s_found": "✅ Found",
-        "s_stats": "Found:",
-        "btn_upd": "🔄 Check for Updates",
-        "upd_ok": "✅ You have the latest version!",
-        "upd_err": "❌ Update check failed",
-        "upd_no_git": "❌ Git not found! Please install it.",
-        "upd_no_git_ask": "Git not found. Check for updates in browser?",
-        "upd_not_repo": "❌ Downloaded as ZIP. Auto-update disabled.",
-        "upd_not_repo_ask": "Folder is not a Git repo. Would you like to enable auto-updates?\n(This will sync your code with GitHub)",
-        "upd_init_ok": "✅ Updates enabled! Click the button again.",
-        "upd_new_zip": "🚀 New version found! Open download page?"
-    }
-}
+# LANGS импортирован из shared.py
 
 def save_theme_pref(theme_name):
-    try:
-        data = {}
-        if os.path.exists(CONFIG_FILE):
-            with open(CONFIG_FILE, "r", encoding="utf-8") as f: data = json.load(f)
-        data["theme"] = theme_name
-        with open(CONFIG_FILE, "w", encoding="utf-8") as f: json.dump(data, f)
-    except: pass
+    save_config_key(CONFIG_FILE, "theme", theme_name)
 
 def load_theme_pref():
-    if os.path.exists(CONFIG_FILE):
-        try:
-            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-                return json.load(f).get("theme", "system")
-        except: pass
-    return "system"
+    return load_config(CONFIG_FILE).get("theme", "system")
 
 def apply_theme(theme_name):
     save_theme_pref(theme_name)
@@ -144,7 +74,7 @@ def apply_theme(theme_name):
     style.configure('TLabel', background=bg_color, foreground=fg_color, font=("Helvetica", 10))
     style.configure('TButton', background=accent_color, foreground="black" if theme_name == "light" else "white")
     style.configure('Treeview', background=text_bg, fieldbackground=text_bg, foreground=input_fg)
-    
+
     if 'text_input' in globals():
         text_input.configure(bg=input_bg, fg=input_fg, insertbackground=input_fg)
     if 'dict_input' in globals():
@@ -156,21 +86,10 @@ def apply_theme(theme_name):
 
 
 def get_lang():
-    if os.path.exists(CONFIG_FILE):
-        try:
-            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-                return json.load(f).get("lang", "ru")
-        except: pass
-    return "ru"
+    return load_config(CONFIG_FILE).get("lang", "ru")
 
 def save_lang(lang_code):
-    try:
-        data = {}
-        if os.path.exists(CONFIG_FILE):
-            with open(CONFIG_FILE, "r", encoding="utf-8") as f: data = json.load(f)
-        data["lang"] = lang_code
-        with open(CONFIG_FILE, "w", encoding="utf-8") as f: json.dump(data, f)
-    except: pass
+    save_config_key(CONFIG_FILE, "lang", lang_code)
     update_texts(lang_code)
 
 def show_help():
@@ -179,7 +98,7 @@ def show_help():
     help_win.title(l.get("m_help", "Help"))
     help_win.geometry("500x450")
     help_win.transient(window)
-    
+
     # Применяем текущую тему к фону
     bg = "#f3f3f3" if current_theme == "light" else "#252526"
     fg = "#333333" if current_theme == "light" else "#cccccc"
@@ -188,16 +107,16 @@ def show_help():
         pass
     else:
         help_win.configure(bg=bg)
-    
+
     tk.Label(help_win, text=l.get("h_title", "Help"), font=("Helvetica", 14, "bold")).pack(pady=10)
-    
+
     txt = tk.Text(help_win, wrap="word", font=("Helvetica", 12), bd=0, padx=20, pady=10)
     if current_theme != "system":
         txt.configure(bg=bg, fg=fg)
     txt.insert("1.0", l.get("h_text", ""))
     txt.config(state="disabled")
     txt.pack(expand=True, fill="both")
-    
+
     ttk.Button(help_win, text="OK", command=help_win.destroy).pack(pady=10)
 
 def check_for_updates():
@@ -205,34 +124,29 @@ def check_for_updates():
     try:
         l = LANGS.get(current_lang, LANGS["ru"])
         update_btn.config(state="disabled")
-        
+
         def run_git():
             try:
                 import subprocess
                 import os
                 import shutil
-                
+
                 # Получаем путь к директории скрипта
                 script_dir = os.path.dirname(os.path.abspath(__file__))
                 # Проект находится на уровень выше папки mac_version
                 project_root = os.path.abspath(os.path.join(script_dir, "../../"))
-                
+
                 # 1. Проверяем наличие Git
                 if not shutil.which("git"):
                     if messagebox.askyesno("Update", l.get("upd_no_git_ask", "Git not found. Open browser?")):
                         # Пытаемся проверить дату последнего коммита через API (без Git)
-                        try:
-                            api_url = "https://api.github.com/repos/schatten08/label-printer/commits/main"
-                            req = urllib.request.Request(api_url, headers={'User-Agent': 'Mozilla/5.0'})
-                            with urllib.request.urlopen(req, timeout=5) as response:
-                                data = json.loads(response.read().decode())
-                                last_commit_date = data['commit']['author']['date'] # 2024-06-04T...
-                                if last_commit_date > APP_VERSION:
-                                    if messagebox.askyesno("Update", l.get("upd_new_zip", "New version!")):
-                                        webbrowser.open("https://github.com/schatten08/label-printer")
-                                else:
-                                    window.after(0, lambda: messagebox.showinfo("Update", l.get("upd_ok", "✅ Latest!")))
-                        except:
+                        newer = is_newer_version_available(APP_VERSION)
+                        if newer is True:
+                            if messagebox.askyesno("Update", l.get("upd_new_zip", "New version!")):
+                                webbrowser.open("https://github.com/schatten08/label-printer")
+                        elif newer is False:
+                            window.after(0, lambda: messagebox.showinfo("Update", l.get("upd_ok", "✅ Latest!")))
+                        else:
                             webbrowser.open("https://github.com/schatten08/label-printer")
                     return
 
@@ -249,26 +163,26 @@ def check_for_updates():
 
                 # Устраняем ошибку "dubious ownership" (для сетевых папок или разных прав)
                 subprocess.run(["git", "config", "--global", "--add", "safe.directory", project_root])
-                
+
                 # Безопасное обновление: Fetch + Reset (убивает любые конфликты в config.json)
                 subprocess.run(["git", "fetch", "--all"], cwd=project_root)
-                
+
                 # Запоминаем текущий хэш
                 old_hash = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=project_root, text=True).strip()
-                
+
                 # Сбрасываем к состоянию на сервере
                 subprocess.run(["git", "reset", "--hard", "origin/main"], cwd=project_root)
                 subprocess.run(["git", "clean", "-fd"], cwd=project_root)
-                
+
                 # Проверяем, изменился ли хэш
                 new_hash = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=project_root, text=True).strip()
-                
+
                 if old_hash == new_hash:
                     window.after(0, lambda: messagebox.showinfo("Update", l.get("upd_ok", "✅ Latest version!")))
                 else:
                     window.after(0, lambda: messagebox.showinfo("Update", "✅ Обновление успешно! Перезапустите программу.\nChanges downloaded! Please restart."))
             except Exception as ex:
-                window.after(0, lambda: messagebox.showerror("Update", f"Git error: {str(ex)}\nУбедитесь, что Git установлен."))
+                window.after(0, lambda err=ex: messagebox.showerror("Update", f"Git error: {str(err)}\nУбедитесь, что Git установлен."))
             finally:
                 window.after(0, lambda: update_btn.config(state="normal"))
 
@@ -298,7 +212,7 @@ def update_texts(lang):
     inv_tree.heading("status", text=l["c_stat"])
     inv_tree.heading("sn", text=l["c_lbl"])
     inv_tree.heading("rest", text=l["c_mod"])
-    
+
     try:
         notebook.tab(3, text=l.get("t_free", " 🔤 Direct Print "))
         desc_free.config(text=l.get("d_free", "Text (Inventory ID, custom name, etc):"))
@@ -319,7 +233,7 @@ def update_texts(lang):
         theme_menu.entryconfig(0, label=l.get("m_dark", "Dark"))
         theme_menu.entryconfig(1, label=l.get("m_light", "Light"))
     except: pass
-        
+
     # Update inventory contents on lang switch
     if 'inv_tree' in globals() and 'inv_data' in globals():
         for sn, data in inv_data.items():
@@ -358,26 +272,26 @@ def generate_label_image(text_str, output_path, use_epam=True, print_barcode=Tru
     Code128 = barcode.get_barcode_class('code128')
     options = {
         "write_text": False,
-        "module_height": 9.0,   
+        "module_height": 9.0,
         "module_width": 0.5,    # Делаем сам штрихкод плотнее и компактнее
         "quiet_zone": 0.0,      # Отключаем встроенные отступы самого штрихкода!
     }
-    
+
     temp_bc = output_path + "_bc"
     temp_bc_full = temp_bc + ".png"
-    
+
     if print_barcode:
         my_bc = Code128(text_str, writer=ImageWriter())
         my_bc.save(temp_bc, options=options)
-    
+
     try:
         from PIL import Image, ImageDraw, ImageFont
-        
+
         if print_barcode:
             bc_img = Image.open(temp_bc_full)
         else:
             bc_img = Image.new('RGB', (0,0))
-            
+
         font = None
         font_paths = [
             "/System/Library/Fonts/Supplemental/Times New Roman Bold.ttf",
@@ -393,13 +307,13 @@ def generate_label_image(text_str, output_path, use_epam=True, print_barcode=Tru
                     break
             except:
                 pass
-        
+
         if not font:
             font = ImageFont.load_default()
-            
-        canvas_w = 696 
+
+        canvas_w = 696
         top_text = f"EPAM {text_str}" if use_epam else f"{text_str}"
-        
+
         dummy_draw = ImageDraw.Draw(Image.new('RGB', (1,1)))
         try:
             bbox = font.getbbox(top_text)
@@ -408,37 +322,37 @@ def generate_label_image(text_str, output_path, use_epam=True, print_barcode=Tru
         except AttributeError:
             text_w, text_h = dummy_draw.textsize(top_text, font=font)
             text_h = max(text_h, font_size)
-        
+
         # Абсолютно в ноль убираем пустые поля
         margin_y = 0
         spacing = 5
-        
+
         if print_barcode:
             canvas_h = text_h + bc_img.height + spacing + (margin_y * 2)
         else:
             canvas_h = text_h + (margin_y * 2)
-        
+
         canvas = Image.new('RGB', (canvas_w, canvas_h), 'white')
         draw = ImageDraw.Draw(canvas)
-        
+
         text_x = (canvas_w - text_w) // 2
         text_y = margin_y
         draw.text((text_x, text_y), top_text, fill="black", font=font)
-        
+
         if print_barcode:
             bc_x = (canvas_w - bc_img.width) // 2
             bc_y = text_y + text_h + spacing
             canvas.paste(bc_img, (bc_x, bc_y))
 
         canvas.save(output_path + ".png", "PNG", dpi=(300.0, 300.0))
-        
+
         if print_barcode:
             try:
                 import os
                 os.remove(temp_bc_full)
             except:
                 pass
-            
+
     except Exception as e:
         print("Ошибка генерации новой этикетки:", e)
 
@@ -461,12 +375,12 @@ def send_to_printer(text_data, status_widget, btn_widget=None, use_epam=True, pr
         try:
             import re
             selected_printer = printer_var.get()
-            
+
             if isinstance(text_data, list):
                 numbers = [str(n).strip() for n in text_data if str(n).strip()]
             else:
                 numbers = [n.strip() for n in re.split(r'[,;\s]+', str(text_data)) if n.strip()]
-            
+
             total_count = len(numbers)
             if total_count > 1:
                 window.after(0, lambda: progress_frame.pack(fill=tk.X, padx=20, pady=(0, 10)))
@@ -477,41 +391,41 @@ def send_to_printer(text_data, status_widget, btn_widget=None, use_epam=True, pr
                 clean_num = num.strip()
                 if not clean_num:
                     continue
-                
+
                 import os
                 import tempfile
                 import subprocess
-                
+
                 temp_file = os.path.join(tempfile.gettempdir(), f"label_{clean_num}")
                 generate_label_image(clean_num, temp_file, use_epam=use_epam, print_barcode=print_barcode)
                 image_path = temp_file + ".png"
                 bin_path = temp_file + ".bin"
-                
+
                 try:
                     import warnings
                     warnings.filterwarnings("ignore", category=DeprecationWarning)
                     from brother_ql.conversion import convert
                     from brother_ql.raster import BrotherQLRaster
-                    
+
                     qlr = BrotherQLRaster('QL-810W')
-                    
+
                     instructions = convert(
-                        qlr=qlr, 
-                        images=[image_path], 
+                        qlr=qlr,
+                        images=[image_path],
                         label='62', # Лента 62mm
-                        rotate='0', # НУЛЕВОЙ поворот! Наша картинка ровно 696px в ширину. 
+                        rotate='0', # НУЛЕВОЙ поворот! Наша картинка ровно 696px в ширину.
                         threshold=70.0,
                         dither=False,
                         compress=True,
                         red=False
                     )
-                    
+
                     with open(bin_path, 'wb') as f:
                         f.write(instructions)
-                    
+
                     # Отправляем RAW файл на принтер
                     subprocess.run(["lp", "-d", selected_printer, "-o", "raw", bin_path], check=True)
-                    
+
                     if total_count > 1:
                         window.after(0, lambda val=i: progress_bar.configure(value=val))
                         window.after(0, lambda val=i: progress_lbl.config(text=f"{val} / {total_count}"))
@@ -526,7 +440,7 @@ def send_to_printer(text_data, status_widget, btn_widget=None, use_epam=True, pr
             window.after(0, lambda: status_widget.config(text=f"✅ Напечатано: {len(numbers)} шт.", foreground="green"))
             if total_count > 1:
                 window.after(2000, lambda: progress_frame.pack_forget())
-            
+
         except Exception as e:
             window.after(0, lambda err=e: messagebox.showerror("Ошибка печати", f"Ошибка: {err}"))
             window.after(0, lambda: status_widget.config(text="❌ Ошибка", foreground="red"))
@@ -563,37 +477,9 @@ def on_scan(event):
     scan_entry.delete(0, tk.END)
     if not sn:
         return
-        
-    raw_dict = dict_input.get("1.0", tk.END).strip().splitlines()
-    mapping = {}
-    for i in range(len(raw_dict)):
-        line = raw_dict[i].strip()
-        if not line: continue
-            
-        parts = re.split(r'[\t,; ]+', line)
-        parts = [p for p in parts if p]
-        
-        if len(parts) >= 2:
-            mapping[parts[0]] = parts[-1]
-            mapping[parts[-1]] = parts[0]
-        elif len(parts) == 1 and i + 1 < len(raw_dict):
-            next_line_parts = re.split(r'[\t,; ]+', raw_dict[i+1].strip())
-            next_line_parts = [p for p in next_line_parts if p]
-            if len(next_line_parts) >= 1:
-                mapping[parts[0]] = next_line_parts[-1]
-                mapping[next_line_parts[-1]] = parts[0]
-            
-    if sn in mapping:
-        label = mapping[sn]
-    elif sn.upper().startswith('S') and sn[1:] in mapping:
-        label = mapping[sn[1:]]
-    else:
-        label = None
-        # Поиск по подстроке: сканеры с оборудования часто выдают лишние префиксы или аппаратные суффиксы ревизии (например, букву 'F')
-        for excel_sn, excel_label in mapping.items():
-            if len(excel_sn) >= 5 and (excel_sn.upper() in sn.upper() or sn.upper() in excel_sn.upper()):
-                label = excel_label
-                break
+
+    mapping = parse_mapping(dict_input.get("1.0", tk.END))
+    label = lookup_sn(sn, mapping)
 
     if label:
         label = re.sub(r'[^\w\s\-,;]', '', label)
@@ -602,11 +488,11 @@ def on_scan(event):
     else:
         threading.Thread(target=play_sound, args=("error",), daemon=True).start()
         scan_status.config(text=f"❌ SN не найден: {sn}", foreground="red")
-        
+
         if messagebox.askyesno("Штрихкод не найден", f"Штрихкод '{sn}' не найден в словаре.\nРаспечатать его как Инвентарный номер?"):
             sn_to_print = re.sub(r'[^\w\s\-,;]', '', sn)
             send_to_printer([sn_to_print], scan_status)
-        
+
     return "break"
 
 def add_context_menu(widget):
@@ -614,7 +500,7 @@ def add_context_menu(widget):
     menu.add_command(label="Вставить", command=lambda: widget.event_generate("<<Paste>>"))
     menu.add_command(label="Копировать", command=lambda: widget.event_generate("<<Copy>>"))
     menu.add_command(label="Вырезать", command=lambda: widget.event_generate("<<Cut>>"))
-    
+
     # Правый клик на Mac (Button-2 или Button-3)
     widget.bind("<Button-2>", lambda e: menu.tk_popup(e.x_root, e.y_root))
     widget.bind("<Button-3>", lambda e: menu.tk_popup(e.x_root, e.y_root))
@@ -738,13 +624,13 @@ def load_inventory():
         inv_tree.delete(item)
     inv_data.clear()
     inv_items_map.clear()
-    
+
     raw_text = raw_content.split('\n')
     for line in raw_text:
         parts = re.split(r'[\t,;]+', line.strip())
         parts = [p.strip() for p in parts if p.strip()]
         if not parts: continue
-        
+
         if len(parts) == 1:
             sn = parts[0]
             rest = ""
@@ -755,11 +641,11 @@ def load_inventory():
             else:
                 sn = parts[0]
                 rest = " | ".join(parts[1:])
-        
-        
+
+
         status = "❌ Ожидает"
         item_id = inv_tree.insert("", tk.END, values=(status, sn, rest))
-        
+
         inv_data[sn] = {"status": status, "sn": sn, "rest": rest, "item_id": item_id}
         inv_items_map[sn] = item_id
 
@@ -844,14 +730,17 @@ ttk.Label(inv_scan_frame, textvariable=inv_stats_var, font=("Helvetica", 10, "bo
 
 def update_inv_stats():
     total = len(inv_data)
-    found = sum(1 for v in inv_data.values() if "Найдено" in v["status"])
-    inv_stats_var.set(f"Найдено: {found} / {total}")
+    # Проверяем оба варианта статуса (рус и англ) — чтобы счётчик работал после смены языка
+    found = sum(1 for v in inv_data.values() if "Найдено" in v["status"] or "Found" in v["status"])
+    l = LANGS.get(current_lang, LANGS["ru"])
+    label = l.get("found_stat", "Найдено:")
+    inv_stats_var.set(f"{label} {found} / {total}")
 
 def on_inv_scan(event):
     sn = inv_scan_entry.get().strip()
     inv_scan_entry.delete(0, tk.END)
     if not sn: return
-    
+
     target_id = None
     if sn in inv_items_map:
         target_id = inv_items_map[sn]
@@ -862,21 +751,21 @@ def on_inv_scan(event):
             if len(excel_sn) >= 5 and (excel_sn.upper() in sn.upper() or sn.upper() in excel_sn.upper()):
                 target_id = item_id
                 break
-                
+
     if target_id:
         try:
             item_data = inv_tree.item(target_id)
             vals = item_data.get('values', [])
             sn_key = vals[1] if len(vals) > 1 else sn
             rest_key = vals[2] if len(vals) > 2 else ""
-            
+
             inv_tree.item(target_id, values=("✅ Найдено", sn_key, rest_key), tags=('found',))
-            
+
             for k, v in inv_data.items():
                 if v['item_id'] == target_id:
                     v["status"] = "✅ Найдено"
                     break
-                    
+
             inv_tree.see(target_id)
             update_inv_stats()
             threading.Thread(target=play_sound, args=("success",), daemon=True).start()
@@ -894,11 +783,11 @@ def export_inventory():
     if not inv_data:
         messagebox.showinfo("Пусто", "Нет данных для экспорта.")
         return
-        
+
     default_name = f"inventory_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv"
     filepath = filedialog.asksaveasfilename(defaultextension=".csv", initialfile=default_name, filetypes=[("CSV (Excel)", "*.csv")])
     if not filepath: return
-    
+
     try:
         with open(filepath, 'w', encoding='utf-8-sig', newline='') as f:
             import csv
@@ -930,15 +819,15 @@ free_status.pack(pady=5)
 def on_free_print(event=None):
     raw_text = free_entry.get("1.0", tk.END).strip()
     if not raw_text: return
-    
+
     lines = [line.strip() for line in re.split(r'[\n,;]+', raw_text) if line.strip()]
-    
+
     clean_lines = []
     for line in lines:
         line = re.sub(r'[^\w\s\-\.,;]', '', line).strip()
         if line:
             clean_lines.append(line)
-            
+
     if not clean_lines: return
     send_to_printer(clean_lines, free_status, use_epam=False, print_barcode=False)
 

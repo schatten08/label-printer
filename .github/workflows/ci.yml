@@ -17,6 +17,15 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Lint with ruff
+        run: ruff check src/shared.py src/windows_version/print_gui.py src/mac_version/print_gui_mac.py
+
+      - name: Compile-check shared module
+        run: python -m py_compile "src/shared.py"
+
       - name: Compile-check Windows GUI source
         run: python -m py_compile "src/windows_version/print_gui.py"
 

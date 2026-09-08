@@ -1,0 +1,30 @@
+# ruff.toml — настройки линтера для проекта Brother Label Printer
+# Документация: https://docs.astral.sh/ruff/configuration/
+
+[lint]
+# Проверяем только реально важные правила:
+#   E   — синтаксические ошибки pycodestyle
+#   F   — pyflakes (неиспользуемые импорты, неопределённые имена)
+#   W   — предупреждения pycodestyle
+# Остальные (I=сортировка импортов, BLE=слепые исключения, S=безопасность,
+#             DTZ=таймзоны, PERF=оптимизации) — слишком педантичны для GUI-утилиты
+select = ["E", "F", "W"]
+
+ignore = [
+    "E501",   # line too long — длинные строки допустимы в GUI-коде
+    "E402",   # module level import not at top — sys.path.insert перед from shared import
+    "E701",   # multiple statements on one line — стиль раннего возврата
+    "E741",   # ambiguous variable name `l` — локализационный словарь, исторически так
+    "F401",   # imported but unused — условные импорты внутри try/except
+    "F841",   # local variable assigned but never used — theme vars (accent_hover, tab_inactive)
+    "W292",   # no newline at end of file — не критично
+    "E722",   # do not use bare `except` — намеренно в cleanup/sound/font блоках
+]
+
+# Исключаем папки с зависимостями и артефактами сборки
+exclude = [
+    ".venv",
+    "venv",
+    "build",
+    "dist",
+]
